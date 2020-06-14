@@ -44,3 +44,13 @@ Compile has 2 steps:
 
 Use `microcom` to debug read time. RTC may drift overtime and needs to
 be re-adjuted.
+
+###  Serial to RGB
+
+Control from python script:
+
+```sh
+pip install pyserial
+./serial_to_RGB/color_to_serial 100 0 0
+./serial_to_RGB/color_to_serial
+```
