@@ -47,10 +47,20 @@ be re-adjuted.
 
 ###  Serial to RGB
 
-Control from python script:
+Control manually from python script:
 
 ```sh
 pip install pyserial
 ./serial_to_RGB/color_to_serial 100 0 0
 ./serial_to_RGB/color_to_serial
 ```
+Control with MIDI controller
+
+```sh
+pip install pygame
+python ./serial_to_RGB/midi_to_serial.py
+```
+
+Troubleshoot:
+
+Had to: `LD_PRELOAD=/usr/lib/x86_64-linux-gnu/alsa-lib/libasound_module_conf_pulse.so`
