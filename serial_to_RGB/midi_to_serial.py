@@ -58,12 +58,12 @@ def send(rgb):
     rgb = toString(rgb[0], rgb[1], rgb[2])
     #print('>>> ' + rgb)
     ser.write(rgb);
-    time.sleep(0.01)
-    #line = ser.readline()
+    line = ser.readline()
     #print('<<< ' + line)
 
 rgb = [0,0,0]
 
+i=0
 while True:
     time.sleep(0.01)
     try:
@@ -77,8 +77,10 @@ while True:
 
             if midi_channel < 3:
                 rgb[midi_channel]  = midi_entry[INDEX_VALUE]
-                print str(midi_entry) + ' rgb => ' + str(rgb)
-                send(rgb)
+
+        i += 1
+        print str(midi_entry) + ' rgb => ' + str(rgb) + ' i='+str(i)
+        send(rgb)
 
     except Exception as e:
         print e
