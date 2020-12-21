@@ -11,10 +11,10 @@
 RTC_PCF8523 rtc;
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
-const int RED[3] = {255, 0, 0};
-const int GREEN[3] = {0, 255, 0};
-const int BLACK[3] = {0, 0, 0};
-const int color_amplitude = 50; // max=255
+int RED[3] = {255, 0, 0};
+int GREEN[3] = {0, 255, 0};
+int BLACK[3] = {0, 0, 0};
+int color_amplitude = 50; // max=255
 int red_light_pin= 11;
 int green_light_pin = 10;
 int blue_light_pin = 9;

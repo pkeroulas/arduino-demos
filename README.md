@@ -6,7 +6,8 @@
 - [ADAfruit DataLogger Shield](https://cdn-learn.adafruit.com/downloads/pdf/adafruit-data-logger-shield.pdf)
 
 ## Software
-- OS: Ubuntu 18.04
+
+- OS: Ubuntu 20.04
 - Arduino v1.8.9
 - microcom
 
@@ -17,7 +18,7 @@ TODO
 ## Compile & upload any demo
 
 ```sh
-arduino --upload clock_to_RGB/clock_to_RGB.ino
+arduino --upload clock_to_RGB/clock_to_RGB.ino --port /dev/ttyACM0
 ```
 
 ## Serial port
@@ -30,7 +31,8 @@ microcom -s 115200 -p /dev/ttyAMC0
 
 ### Clock to RGB
 
-Based on  arduino-1.8.9/libraries/RTClib/examples/pcf8523/pcf8523.ino 
+`clock_to_RGB/clock_to_RGB.ino` is based on `arduino-1.8.9/libraries/RTClib/examples/pcf8523/pcf8523.ino `.
+For later version, clone [RTClib](https://github.com/adafruit/RTClib) in `arduino-1.8.13/libraries/`.
 
 - Use Data Loger shield with cell coin to power the RTC
 - Use a RGB LED on PWM pins solder on top of the shield
