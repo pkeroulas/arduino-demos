@@ -35,12 +35,14 @@ void setup () {
     Serial.begin(115200);
 
     Serial.println("RTC init...");
+    delay(300);
+
     if (! rtc.begin()) {
         Serial.println("Couldn't find RTC");
         //while (1);
     }
 
-    Serial.println("...");
+    Serial.println("Init OK...");
     delay(300);
 
     if (! rtc.initialized()) {
