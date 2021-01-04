@@ -97,10 +97,10 @@ void loop () {
     else // week
     {
     */
-        // night (red) < 7:15 < day (green) < 20h53 < night(red)
+        // night (red) < 7:30 < day (green) < 20h30 < night(red)
         if ((now.hour() >= 7) && (now.hour() <= 20)) { // green zone
-           if ((now.hour() == 7) && (now.minute() < 15)) { RGB_color(RED); } // exception
-           else if ((now.hour() == 20) && (now.minute() > 53)) { RGB_color(RED); } // exception
+           if ((now.hour() == 7) && (now.minute() < 30)) { RGB_color(RED); } // exception
+           else if ((now.hour() == 20) && (now.minute() > 30)) { RGB_color(RED); } // exception
            else { RGB_color(GREEN); }
         }
         else { RGB_color(RED); }
