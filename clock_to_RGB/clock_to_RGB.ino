@@ -11,9 +11,11 @@
 RTC_PCF8523 rtc;
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
+int BLACK[3] = {0, 0, 0};
 int RED[3] = {255, 0, 0};
 int GREEN[3] = {0, 255, 0};
-int BLACK[3] = {0, 0, 0};
+int BLUE[3] = {0, 0, 255};
+int ORANGE[3] = {200, 100, 0};
 int color_amplitude = 50; // max=255
 int red_light_pin= 11;
 int green_light_pin = 10;
@@ -97,10 +99,14 @@ void loop () {
     else // week
     {
     */
-        // night (red) < 7:30 < day (green) < 20h30 < night(red)
-        if ((now.hour() >= 7) && (now.hour() <= 20)) { // green zone
-           if ((now.hour() == 7) && (now.minute() < 30)) { RGB_color(RED); } // exception
-           else if ((now.hour() == 20) && (now.minute() > 30)) { RGB_color(RED); } // exception
+        // night (red) < 7:15 < orange < 7:25 day < (green) < 20h30 < night(red)
+        if ((now.hour() >= 7) && (now.hour() <= 20)) {                       // green zone
+           if ((now.hour() == 7) && (now.minute() < 15)) { RGB_color(RED); } // exception red
+
+           else if ((now.hour() == 7) && (now.minute() < 25)) { RGB_color(ORANGE); } // orange
+
+           else if ((now.hour() == 20) && (now.minute() > 20)) { RGB_color(RED); } // exception
+
            else { RGB_color(GREEN); }
         }
         else { RGB_color(RED); }
