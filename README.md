@@ -24,7 +24,7 @@ arduino --upload clock_to_RGB/clock_to_RGB.ino --port /dev/ttyACM0
 ## Serial port
 
 ```sh
-microcom -s 115200 -p /dev/ttyAMC0
+microcom -s 115200 -p /dev/ttyACM0
 ```
 
 ## Demos
