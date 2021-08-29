@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Read 3 first sliders of Kork NonoKontrol Midi controller
+# Read 3 first sliders of Korg NanoKontrol Midi controller
 # and write to serial port
 
 from pygame import midi
@@ -37,7 +37,7 @@ INDEX_CHANNEL = 1
 INDEX_VALUE = 2
 buffer_size = 200
 
-controller = midi.Input(midi.get_default_input_id(),buffer_size)
+controller = midi.Input(midi.get_default_input_id(), buffer_size)
 # In case there are more than MIDI controller
 #controller = midi.Input(3 ,buffer_size)
 
@@ -45,24 +45,26 @@ controller = midi.Input(midi.get_default_input_id(),buffer_size)
 # serial init
 
 ser = serial.Serial('/dev/ttyACM0', 115200, timeout=1)
-print('port: ' + ser.name)
+print('Serial port: ' + ser.name)
 
 while not 'Init' in ser.readline():
     print('.')
     time.sleep(1) # bootloader, init(), etc.
 
-def toString(r, g, b):
+def RGBtoString(r, g, b):
     return str(r) + ',' + str(g) + ',' + str(b) + '\n'
 
-def send(rgb):
-    rgb = toString(rgb[0], rgb[1], rgb[2])
+def sendToSerial(rgb):
+    rgb = RGBtoString(rgb[0], rgb[1], rgb[2])
     #print('>>> ' + rgb)
     ser.write(rgb);
     line = ser.readline()
     #print('<<< ' + line)
 
-rgb = [0,0,0]
+#----------------------------------------------------------------------------
+# midi read loop
 
+rgb = [0,0,0]
 i=0
 while True:
     time.sleep(0.01)
@@ -73,14 +75,14 @@ while True:
         buffer = controller.read(buffer_size)
         for entry in buffer:
             midi_entry = entry[0]
-            midi_channel  = midi_entry[INDEX_CHANNEL]
+            midi_channel = midi_entry[INDEX_CHANNEL]
 
             if midi_channel < 3:
-                rgb[midi_channel]  = midi_entry[INDEX_VALUE]
+                rgb[midi_channel] = midi_entry[INDEX_VALUE]
 
         i += 1
         print str(midi_entry) + ' rgb => ' + str(rgb) + ' i='+str(i)
-        send(rgb)
+        sendToSerial(rgb)
 
     except Exception as e:
         print e

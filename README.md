@@ -66,3 +66,9 @@ python ./serial_to_RGB/midi_to_serial.py
 Troubleshoot:
 
 Had to: `LD_PRELOAD=/usr/lib/x86_64-linux-gnu/alsa-lib/libasound_module_conf_pulse.so`
+
+###  neopixel
+
+Install [Adafruit NeoPixel](https://learn.adafruit.com/adafruit-neopixel-uberguide/arduino-library-installation)
+in `<arduino_dir>/libraries`.
+
