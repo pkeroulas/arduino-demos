@@ -3,17 +3,13 @@
 ## Hardware
 
 - Arduino UNO, ATmega328
-- [ADAfruit DataLogger Shield](https://cdn-learn.adafruit.com/downloads/pdf/adafruit-data-logger-shield.pdf)
 
 ## Software
 
 - OS: Ubuntu 20.04
 - Arduino v1.8.9
 - microcom
-
-## Bootloader
-
-TODO
+- python (for external control)
 
 ## Compile & upload any demo
 
@@ -31,10 +27,11 @@ microcom -s 115200 -p /dev/ttyACM0
 
 ### Clock to RGB
 
+
 `clock_to_RGB/clock_to_RGB.ino` is based on `arduino-1.8.9/libraries/RTClib/examples/pcf8523/pcf8523.ino `.
 For later version, clone [RTClib](https://github.com/adafruit/RTClib) in `arduino-1.8.13/libraries/`.
 
-- Use Data Loger shield with cell coin to power the RTC
+- Use [ADAfruit DataLogger Shield](https://cdn-learn.adafruit.com/downloads/pdf/adafruit-data-logger-shield.pdf)
 - Use a RGB LED on PWM pins solder on top of the shield
 - Turn red during night
 - Turn green during day
@@ -56,19 +53,24 @@ pip install pyserial
 ./serial_to_RGB/color_to_serial 100 0 0
 ./serial_to_RGB/color_to_serial
 ```
-Control with MIDI controller
+Control with MIDI controller like the [Kork nanoKontrol2](https://www.korg.com/us/products/computergear/nanokontrol2/)
 
 ```sh
-pip install pygame
+pip install pygame #tested with 1.9.6
 python ./serial_to_RGB/midi_to_serial.py
 ```
 
 Troubleshoot:
+Had to prepend: `LD_PRELOAD=/usr/lib/x86_64-linux-gnu/alsa-lib/libasound_module_conf_pulse.so`
 
-Had to: `LD_PRELOAD=/usr/lib/x86_64-linux-gnu/alsa-lib/libasound_module_conf_pulse.so`
-
-###  neopixel
+###  Neopixel
 
 Install [Adafruit NeoPixel](https://learn.adafruit.com/adafruit-neopixel-uberguide/arduino-library-installation)
 in `<arduino_dir>/libraries`.
 
+For MIDI control, Arduino UNO microcontroller doesn't have USB capability, thus doesn't support MIDI natively.
+[Arduino-MIDI](https://www.arduino.cc/reference/en/libraries/midi-library/) library can still be used but
+using serial port only for transport. And A MIDI-to-serial-converter like
+[timidity ](https://github.com/lathoub/Arduino-USBMIDI.git) must be installed on the host PC.
+
+Execute `start_midi.sh` to launch that converter and the [Kork](https://www.korg.com/us/products/computergear/nanokontrol2/)-to-Arduino bridge.
