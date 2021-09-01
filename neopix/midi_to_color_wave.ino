@@ -74,6 +74,37 @@ void MIDImessage(int command, int MIDInote, int MIDIvelocity) {
   Serial.write(MIDIvelocity);//send velocity data
 }
 
+// -----------------------------------------------------------------------------
+// BUTTONS
+
+#define BUTTON_PIN   2
+#define BUTTON_MIDI_CH   4
+boolean oldState = HIGH;
+
+void processButtons(uint8_t button_pin) {
+    boolean newState = digitalRead(button_pin);
+
+    // button pressed
+    if((newState == LOW) && (oldState == HIGH)) {
+        delay(20); // Short delay to debounce button.
+        newState = digitalRead(button_pin);
+        if(newState == LOW) {      // Yes, still low
+            MIDImessage(noteON, BUTTON_MIDI_CH, 127);
+        }
+    }
+    // button released
+    else if((newState == HIGH) && (oldState == LOW)) {
+        delay(20); // Short delay to debounce button.
+        newState = digitalRead(button_pin);
+        if(newState == HIGH) {      // Yes, still low
+            MIDImessage(noteOFF, BUTTON_MIDI_CH, 0);
+        }
+    }
+    oldState = newState;
+}
+
+// -----------------------------------------------------------------------------
+
 void setup() {
     MIDI.setHandleNoteOn(handleNoteOn);
     MIDI.setHandleNoteOff(handleNoteOff);
@@ -84,10 +115,14 @@ void setup() {
     strip.begin();
     strip.setBrightness(50);
     strip.show(); // Initialize all pixels to 'off'
+
+    pinMode(BUTTON_PIN, INPUT_PULLUP);
 }
 
 uint8_t i = 0;
 void loop() {
+    processButtons(BUTTON_PIN);
+
     MIDI.read();
     delay(SPEED);
 
