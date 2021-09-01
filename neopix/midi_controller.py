@@ -1,4 +1,6 @@
 #!/usr/bin/python
+#
+# KorgNanoKontroler handler to arduino through ttymidi
 
 from pygame import midi
 import serial
@@ -35,16 +37,35 @@ korg_update = False
 arduino_rgb = [0,0,0]
 arduino_update = False
 
+# button ID (= MIDI channel): [rgb_index, rgb_value]
+buttons_rgb_map = {
+        32: [0, 127],
+        48: [0, 64],
+        64: [0, 0],
+        33: [1, 127],
+        49: [1, 64],
+        65: [1, 0],
+        34: [2, 127],
+        50: [2, 64],
+        66: [2, 0]
+    }
+
 while True:
-    time.sleep(0.01)
+    time.sleep(0.1)
     try:
         if korg.poll():
             buffer = korg.read(buffer_size)
             for entry in buffer:
                 midi_entry = entry[0]
                 midi_channel = midi_entry[INDEX_CHANNEL]
+                print "korg    : "+ str(entry)
+                """
                 if midi_channel < 3:
                     korg_rgb[midi_channel] = midi_entry[INDEX_VALUE]
+                    korg_update = True
+                """
+                if midi_channel in buttons_rgb_map.keys() and midi_entry[INDEX_VALUE] == 127:
+                    korg_rgb[buttons_rgb_map[midi_channel][0]] = buttons_rgb_map[midi_channel][1]
                     korg_update = True
 
             if korg_update:
@@ -61,6 +82,7 @@ while True:
                 if midi_channel < 3:
                     arduino_rgb[midi_channel] = midi_entry[INDEX_VALUE]
                     arduino_update = True
+                print "arduino : "+ str(entry)
             if arduino_update:
                 print "arduino : "+ str(entry)  + " rgb : "+ str(arduino_rgb)
                 arduino_update = False

@@ -65,12 +65,20 @@ Had to prepend: `LD_PRELOAD=/usr/lib/x86_64-linux-gnu/alsa-lib/libasound_module_
 
 ###  Neopixel
 
+`midi_to_color_wave.ino` turns MIDI commands into color wave along the
+[Neopixel strip]((//www.adafruit.com/product/1376?length=1). It also
+report the status of button_pin 2 by sending MIDI messages back.
+
 Install [Adafruit NeoPixel](https://learn.adafruit.com/adafruit-neopixel-uberguide/arduino-library-installation)
 in `<arduino_dir>/libraries`.
+This [site](https://www.tweaking4all.com/hardware/arduino/adruino-led-strip-effects/) proposes a good examples of strip FX.
 
-For MIDI control, Arduino UNO microcontroller doesn't have USB capability, thus doesn't support MIDI natively.
-[Arduino-MIDI](https://www.arduino.cc/reference/en/libraries/midi-library/) library can still be used but
-using serial port only for transport. And A MIDI-to-serial-converter like
-[timidity ](https://github.com/lathoub/Arduino-USBMIDI.git) must be installed on the host PC.
-
-Execute `start_midi.sh` to launch that converter and the [Kork](https://www.korg.com/us/products/computergear/nanokontrol2/)-to-Arduino bridge.
+For MIDI control, Arduino UNO microcontroller doesn't have USB
+capability, thus doesn't support MIDI natively.
+[Arduino-MIDI](https://www.arduino.cc/reference/en/libraries/midi-library/)
+library can still be used but only with serial port as transport.
+And a MIDI-over-serial-bridge like [ttymidi](http://www.varal.org/ttymidi/)
+must be installed on the host PC.
+Execute `start_midi.sh` to launch that bridge and
+the [Kork](https://www.korg.com/us/products/computergear/nanokontrol2/)-to-Arduino bridge.
+Note that, using the sliders may saturate the data path, and buttons are prefered.
