@@ -1,10 +1,20 @@
 #!/usr/bin/python
-
 import os
 import sys
 import time
 import glob
 import platform
+
+os_name = platform.system()
+if os_name == 'Linux':
+    SERIAL_DEV_BASE = '/dev/ttyACM*'
+    SYSLOG_FILE = '/dev/log'
+elif os_name == 'Darwin':
+    SERIAL_DEV_BASE = '/dev/tty.usbmodemFA*'
+    SYSLOG_FILE = '/var/run/syslog'
+else:
+    print('ERROR:unknow os' + os_name)
+    exit(1)
 
 #---------------------------------------------------------
 import logging
@@ -12,7 +22,7 @@ import logging.handlers
 
 my_logger = logging.getLogger('MyServerLogger')
 my_logger.setLevel(logging.DEBUG)
-handler = logging.handlers.SysLogHandler(address = '/dev/log')
+handler = logging.handlers.SysLogHandler(address = SYSLOG_FILE)
 my_logger.addHandler(handler)
 
 def mylogger(msg):
@@ -56,14 +66,7 @@ devices_serial = []
 # auto detect all the arduinos
 def serialOpen():
     global devices_names, devices_serial
-    os = platform.system()
-    if os == 'Linux':
-        devices_names = glob.glob('/dev/ttyACM*')
-    elif os == 'Darwin':
-        devices_names = glob.glob('/dev/tty.usbmodemFA*')
-    else:
-        mylogger('ERROR:unknow os' + os)
-        exit(1)
+    devices_names = glob.glob(SERIAL_DEV_BASE)
 
     mylogger('Devices' + str(devices_names))
     for dev in devices_names:
