@@ -1,5 +1,4 @@
 #!/usr/bin/python
-#
 
 import os
 import sys
@@ -16,24 +15,29 @@ my_logger.setLevel(logging.DEBUG)
 handler = logging.handlers.SysLogHandler(address = '/dev/log')
 my_logger.addHandler(handler)
 
-def mylogger(header, msg):
-    line = header + ': ' + str(msg)
+def mylogger(msg):
+    line = 'ArduinoServerrrr: ' + str(msg)
     my_logger.debug(line)
     print(line)
 
 #---------------------------------------------------------
 import socket
 
-s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-try:
-    os.remove("/tmp/socketname")
-except OSError:
-    pass
-s.bind("/tmp/socketname")
-s.listen(1)
+SOCKETFILE = "/tmp/socketname"
+sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+
+def socketOpen():
+    global sock
+    try:
+        os.remove(SOCKETFILE)
+    except OSError:
+        pass
+    sock.bind(SOCKETFILE)
+    sock.listen(1)
 
 def socketRead():
-    conn, addr = s.accept()
+    global sock
+    conn, addr = sock.accept()
     while True:
         data = conn.recv(1024)
         if not data: break
@@ -58,26 +62,26 @@ def serialOpen():
     elif os == 'Darwin':
         devices_names = glob.glob('/dev/tty.usbmodemFA*')
     else:
-        mylogger('ERROR', 'unknow os' + os)
-        exit(-1)
+        mylogger('ERROR:unknow os' + os)
+        exit(1)
 
-    mylogger('Devices', devices_names)
+    mylogger('Devices' + str(devices_names))
     for dev in devices_names:
         devices_serial.append(serial.Serial(dev, 115200, timeout=1))
 
     for i, ser in enumerate(devices_serial):
         line = ser.readline();
         while not 'init' in line:
-            mylogger(devices_names[i],'.')
+            mylogger(devices_names[i] + '.')
             time.sleep(1) # bootloader, init(), etc.
             line = ser.readline();
-        mylogger(devices_names[i], '<<< ' + line)
+        mylogger(devices_names[i] + ' <<< ' + line)
 
 def serialClose():
     global devices_names, devices_serial
     for i, ser in enumerate(devices_serial):
         ser.close()
-        mylogger(devices_names[i], 'close')
+        mylogger(devices_names[i] + 'close')
 
 def serialSend(msg):
     global devices_names, devices_serial
@@ -90,26 +94,28 @@ def serialReceive():
     time.sleep(0.1)
     for i, ser in enumerate(devices_serial):
         line = ser.readline()
-        mylogger(devices_names[i], '<<< ' + str([ord(c) for c in line]))
+        mylogger(devices_names[i] + ' <<< ' + str([ord(c) for c in line]))
 
 #---------------------------------------------------------
 # Main
 
 serialOpen()
+socketOpen()
 
 try:
     while True:
         msg = socketRead()
         if msg == '':
-            mylogger('socket', '<<< empty')
+            mylogger('socket <<< empty')
         elif msg == 'kill':
-            mylogger('socket', '<<< kill')
+            mylogger('socket <<< kill')
             break
         else:
-            mylogger('socket', '<<<' + str([ord(i) for i in msg]))
+            mylogger('socket <<<' + str([ord(i) for i in msg]))
             serialSend(msg)
             serialReceive()
 except Exception as e:
     print e
 
+os.remove(SOCKETFILE)
 serialClose()
