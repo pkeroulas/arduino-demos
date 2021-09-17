@@ -59,7 +59,7 @@ def socketSend(msg):
     s.send(msg.encode())
     data = s.recv(1024)
     s.close()
-    mylogger('<<< ' + repr(data))
+    mylogger('<<< ' + data.replace('\r\n',''))
 
 #---------------------------------------------------------
 import sys
@@ -85,16 +85,7 @@ r   = int(sys.argv[3])
 g   = int(sys.argv[4])
 b   = int(sys.argv[5])
 
-# detect and translate forbidden values: '\n', '!'
-for v in [ord('!'), ord('\n')]: # 10 or 33
-    if cmd == v or ID == v:
-        mylogger('ERROR: wrong value for ID/cmd')
-        usage()
-        exit(1)
-    if r == v: r = v-1
-    if g == v: g = v-1
-    if b == v: b = v-1
-
-mylogger('>>> ID:'+str(ID) + ' CMD:'+str(cmd) + ' RGB:['+str(r)+','+str(g)+','+str(b)+']')
-msg = chr(ID) + chr(cmd) + chr(r) + chr(g) + chr(b)
+msg = str(ID) + ',' + str(cmd) + ',' + str(r) + ','+ str(g) + ',' + str(b) + '\n'
+sum_msg = sum([int(v) for v in msg.split(',')])
+mylogger('>>> ID:'+str(ID) + ' CMD:'+str(cmd) + ' RGB:['+str(r)+','+str(g)+','+str(b)+']  sum: '+ str(sum_msg))
 socketSend(msg)

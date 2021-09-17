@@ -43,15 +43,42 @@ uint8_t r2,g2,b2; // foreground color
 // -----------------------------------------------------------------------------
 // SERIAL
 
-#define SERIAL_INDEX_HEADER 0
-#define SERIAL_INDEX_ID     (1-1)
-#define SERIAL_INDEX_CMD    (2-1)
-#define SERIAL_INDEX_RED    (3-1)
-#define SERIAL_INDEX_GREEN  (4-1)
-#define SERIAL_INDEX_BLUE   (5-1)
-#define SERIAL_LEN          (6-1)
+#define SERIAL_CMD_INDEX_ID     0
+#define SERIAL_CMD_INDEX_CMD    1
+#define SERIAL_CMD_INDEX_RED    2
+#define SERIAL_CMD_INDEX_GREEN  3
+#define SERIAL_CMD_INDEX_BLUE   4
+#define SERIAL_CMD_LEN          5
 
-bool serialProcessLine(byte buf) {
+int cmd_buf[SERIAL_CMD_LEN] = {0,0,0,0,0};
+
+bool serialProcessLine() {
+    delay(5);
+    byte string [20];
+    byte size = Serial.readBytes(string, 20);
+    string[size] = 0; // Add the final 0 to end the C string
+
+    int i = 0;
+    int checksum = 0;
+    char* ptr = strtok(string, ",");
+    while (ptr != NULL) {
+        cmd_buf[i] = atoi(ptr);
+        checksum += cmd_buf[i];
+        i++;
+        ptr = strtok(NULL, ",");
+    }
+
+    // debug
+    Serial.println(String(checksum));
+    /*
+    for (int i=0; i<SERIAL_CMD_LEN) {
+        Serial.print(String(" cmd_buf["));
+        Serial.print(String(i));
+        Serial.print(String("]:"));
+        Serial.print(String(cmd_buf[i]));
+        Serial.print(",");
+    }
+    */
 }
 
 // -----------------------------------------------------------------------------
@@ -63,6 +90,7 @@ void setup() {
     strip.show(); // Initialize all pixels to 'off'
 
     Serial.begin(115200);
+    Serial.setTimeout(10);
     delay(10);
     Serial.print("ID "); Serial.print(String(ARDUINO_ID_MY)); Serial.println(" init");
     delay(10);
@@ -70,22 +98,17 @@ void setup() {
 
 void loop() {
     while (Serial.available()) {
-        delay(5);
-        strip.setPixelColor(0,0,100,0);
-        Serial.readStringUntil('!');
-        strip.setPixelColor(1,0,100,0);
-        byte buf[SERIAL_LEN];
-        Serial.readBytes(buf, SERIAL_LEN);
-        strip.setPixelColor(2,0,100,0);
-        if ((buf[SERIAL_INDEX_ID] != ARDUINO_ID_MY) && (buf[SERIAL_INDEX_ID] != ARDUINO_ID_ALL)) { // is it for me?
+        serialProcessLine();
+
+        if ((cmd_buf[SERIAL_CMD_INDEX_ID] != ARDUINO_ID_MY) &&
+            (cmd_buf[SERIAL_CMD_INDEX_ID] != ARDUINO_ID_ALL)) { // is it for me?
             break;
         }
-        strip.setPixelColor(3,0,100,0);
-        Serial.println(String((char *)buf));
 
-        r2 = buf[SERIAL_INDEX_RED];
-        g2 = buf[SERIAL_INDEX_GREEN];
-        b2 = buf[SERIAL_INDEX_BLUE];
+        r2 = cmd_buf[SERIAL_CMD_INDEX_RED];
+        g2 = cmd_buf[SERIAL_CMD_INDEX_GREEN];
+        b2 = cmd_buf[SERIAL_CMD_INDEX_BLUE];
+
         if ((r1!=r2) || (g1!=g2) || (b1!=b2)) {
             strip.setPixelColor(0,r2,g2,b2);
             //colorWave(r1,g1,b1,r2,g2,b2,SPEED);

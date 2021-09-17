@@ -77,7 +77,7 @@ def serialOpen():
         while not 'init' in line:
             mylogger(devices_names[i] + '.')
             time.sleep(1) # bootloader, init(), etc.
-            line = ser.readline();
+            line = ser.readline().replace('\r\n','')
         mylogger(devices_names[i] + ' <<< ' + line)
 
 def serialClose():
@@ -90,14 +90,18 @@ def serialSend(msg):
     global devices_names, devices_serial
     for i, ser in enumerate(devices_serial):
         ser.flush()
-        ser.write('!'+msg)
+        ser.write(msg)
 
-def serialReceive():
+def serialReceive(msg):
     global devices_names, devices_serial
-    time.sleep(0.1)
+    sum_orig = sum([int(v) for v in msg.split(',')])
+
     for i, ser in enumerate(devices_serial):
-        line = ser.readline()
-        mylogger(devices_names[i] + ' <<< ' + str([ord(c) for c in line]))
+        line = ser.readline().replace('\r\n','')
+        mylogger(devices_names[i] + ' <<< sum:' + line)
+        if not int(line) == sum_orig:
+            mylogger(devices_names[i] + ' ERROR: wrong checksum')
+
 
 #---------------------------------------------------------
 # Main
@@ -114,9 +118,10 @@ try:
             mylogger('socket <<< kill')
             break
         else:
-            mylogger('socket <<<' + str([ord(i) for i in msg]))
+            mylogger('socket <<< ' + msg.replace('\n',''))
             serialSend(msg)
-            serialReceive()
+            time.sleep(0.01)
+            serialReceive(msg)
 except Exception as e:
     print e
 
