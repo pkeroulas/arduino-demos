@@ -99,7 +99,9 @@ def serialReceive(msg):
     for i, ser in enumerate(devices_serial):
         line = ser.readline().replace('\r\n','')
         mylogger(devices_names[i] + ' <<< sum:' + line)
-        if not int(line) == sum_orig:
+        if line == '':
+            mylogger(devices_names[i] + ' ERROR: empty answer')
+        elif not int(line) == sum_orig:
             mylogger(devices_names[i] + ' ERROR: wrong checksum')
 
 
