@@ -37,8 +37,8 @@ byte colorMix(byte c1, byte c2, uint8_t i, uint8_t fade) {
     return c1*i/fade + c2*(fade-i)/fade;
 }
 
-uint8_t r1,g1,b1; // background color
-uint8_t r2,g2,b2; // foreground color
+uint8_t r1,g1,b1,w1; // background color
+uint8_t r2,g2,b2,w2; // foreground color
 
 // -----------------------------------------------------------------------------
 // SERIAL
@@ -48,9 +48,10 @@ uint8_t r2,g2,b2; // foreground color
 #define SERIAL_CMD_INDEX_RED    2
 #define SERIAL_CMD_INDEX_GREEN  3
 #define SERIAL_CMD_INDEX_BLUE   4
-#define SERIAL_CMD_LEN          5
+#define SERIAL_CMD_INDEX_WHITE  5
+#define SERIAL_CMD_LEN          6
 
-int cmd_buf[SERIAL_CMD_LEN] = {0,0,0,0,0};
+int cmd_buf[SERIAL_CMD_LEN] = {0,0,0,0,0,0};
 
 bool serialProcessLine() {
     delay(5);
@@ -100,21 +101,22 @@ void loop() {
     while (Serial.available()) {
         serialProcessLine();
 
-        if ((cmd_buf[SERIAL_CMD_INDEX_ID] != ARDUINO_ID_MY) &&
-            (cmd_buf[SERIAL_CMD_INDEX_ID] != ARDUINO_ID_ALL)) { // is it for me?
+        int id = cmd_buf[SERIAL_CMD_INDEX_ID];
+        if ((id != ARDUINO_ID_MY) && (id != ARDUINO_ID_ALL)) { // is it for me?
             break;
         }
 
+        int cmd = cmd_buf[SERIAL_CMD_INDEX_CMD];
         r2 = cmd_buf[SERIAL_CMD_INDEX_RED];
         g2 = cmd_buf[SERIAL_CMD_INDEX_GREEN];
         b2 = cmd_buf[SERIAL_CMD_INDEX_BLUE];
+        w2 = cmd_buf[SERIAL_CMD_INDEX_WHITE];
 
+        // debug strip.setPixelColor(0,r2,g2,b2); strip.show();
         if ((r1!=r2) || (g1!=g2) || (b1!=b2)) {
-            strip.setPixelColor(0,r2,g2,b2);
-            //colorWave(r1,g1,b1,r2,g2,b2,SPEED);
+            colorWave(r1,g1,b1,r2,g2,b2,SPEED);
             r1 = r2; g1 = g2; b1 = b2;
         }
-        strip.show();
     }
 
     delay(SPEED);

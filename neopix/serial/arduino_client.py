@@ -64,7 +64,7 @@ def socketSend(msg):
 #---------------------------------------------------------
 import sys
 
-if len(sys.argv) < 6:
+if len(sys.argv) < 7:
     if len(sys.argv) == 2 and sys.argv[1] == 'kill':
         if os.path.exists(SOCKETFILE):
             mylogger('kill server')
@@ -84,8 +84,9 @@ cmd = int(sys.argv[2])
 r   = int(sys.argv[3])
 g   = int(sys.argv[4])
 b   = int(sys.argv[5])
+w   = int(sys.argv[6])
 
-msg = str(ID) + ',' + str(cmd) + ',' + str(r) + ','+ str(g) + ',' + str(b) + '\n'
+msg = str(ID) + ',' + str(cmd) + ',' + str(r) + ','+ str(g) + ',' + str(b) + ',' + str(w) + '\n'
 sum_msg = sum([int(v) for v in msg.split(',')])
-mylogger('>>> ID:'+str(ID) + ' CMD:'+str(cmd) + ' RGB:['+str(r)+','+str(g)+','+str(b)+']  sum: '+ str(sum_msg))
+mylogger('>>> ID:'+str(ID) + ' CMD:'+str(cmd) + ' RGB:['+str(r)+','+str(g)+','+str(b)+','+str(w)+']  sum: '+ str(sum_msg))
 socketSend(msg)
