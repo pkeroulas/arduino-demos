@@ -3,29 +3,55 @@
   #include <avr/power.h>
 #endif
 
-#define ARDUINO_ID_ALL 0
-#define ARDUINO_ID_MY  1
+// -----------------------------------------------------------------------------
+// PUPPET
+
+#define ARDUINO_ID_ALL    0
+#define ARDUINO_ID_LEFT_FRONT_PAW    1
+#define ARDUINO_ID_RIGHT_FRONT_PAW   2
+#define ARDUINO_ID_LEFT_BACK_PAW     3
+#define ARDUINO_ID_RIGHT_BACK_PAW    4
+#define ARDUINO_ID_BELLY  5
+#define ARDUINO_ID_BACK   6
+#define ARDUINO_ID_HEAD   7
+
+// EDIT THIS:
+int MY_ID = ARDUINO_ID_LEFT_FRONT_PAW;
 
 // -----------------------------------------------------------------------------
 // NEOPIXEL
 
-#define PIN 6
-#define NUM_LEDS 180
-#define SPEED 10
-#define FADE  100
+#define NEO_CTRL_PIN 6
+#define NEO_NUM_LEDS 180
+#define NEO_SPEED 10
+#define NEO_FADE  100
 
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, PIN, NEO_GRB + NEO_KHZ800);
+#define NEO_FX_RESET  0
+#define NEO_FX_WAVE   1
+#define NEO_FX_FIRE   2
+#define NEO_FX_METEOR 3
+#define NEO_FX_FLASH  4
+#define NEO_FX_FILL   5
+
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NEO_NUM_LEDS, NEO_CTRL_PIN, NEO_GRB + NEO_KHZ800);
+
+// TODO: define HAS_WHITE and select NEO_GRBW
+//       Adafruit_NeoPixel strip(PIXEL_COUNT, PIXEL_PIN, NEO_GRBW + NEO_KHZ800);
+//       strip.setPixelColor(Pixel, strip.Color(red, green, blue));
+
+uint8_t r1,g1,b1,w1; // background color
+uint8_t r2,g2,b2,w2; // foreground color
 
 void colorWave(byte red1, byte green1, byte blue1, byte red2, byte green2, byte blue2,int SpeedDelay) {
     // Fill the dots one after the other with a color
-    for(uint16_t i=0; i<strip.numPixels()+FADE; i++) {
-        for (uint8_t k=0; k<FADE; k++)
+    for(uint16_t i=0; i<strip.numPixels()+NEO_FADE; i++) {
+        for (uint8_t k=0; k<NEO_FADE; k++)
         {
             strip.setPixelColor(
-                i-FADE+k,
-                colorMix(red1, red2, k, FADE),
-                colorMix(green1, green2, k, FADE),
-                colorMix(blue1, blue2, k, FADE)
+                i-NEO_FADE+k,
+                colorMix(red1, red2, k, NEO_FADE),
+                colorMix(green1, green2, k, NEO_FADE),
+                colorMix(blue1, blue2, k, NEO_FADE)
             );
         }
         strip.show();
@@ -33,12 +59,16 @@ void colorWave(byte red1, byte green1, byte blue1, byte red2, byte green2, byte 
     }
 }
 
+void colorFill(byte r, byte g, byte b, int len) {
+    for(uint16_t i=0; i<len; i++) {
+        strip.setPixelColor(i, r, g, b);
+    }
+    strip.show();
+}
+
 byte colorMix(byte c1, byte c2, uint8_t i, uint8_t fade) {
     return c1*i/fade + c2*(fade-i)/fade;
 }
-
-uint8_t r1,g1,b1,w1; // background color
-uint8_t r2,g2,b2,w2; // foreground color
 
 // -----------------------------------------------------------------------------
 // SERIAL
@@ -93,7 +123,7 @@ void setup() {
     Serial.begin(115200);
     Serial.setTimeout(10);
     delay(10);
-    Serial.print("ID "); Serial.print(String(ARDUINO_ID_MY)); Serial.println(" init");
+    Serial.print("ID "); Serial.print(String(MY_ID)); Serial.println(" init");
     delay(10);
 }
 
@@ -102,7 +132,7 @@ void loop() {
         serialProcessLine();
 
         int id = cmd_buf[SERIAL_CMD_INDEX_ID];
-        if ((id != ARDUINO_ID_MY) && (id != ARDUINO_ID_ALL)) { // is it for me?
+        if ((id != MY_ID) && (id != ARDUINO_ID_ALL)) { // is it for me?
             break;
         }
 
@@ -112,12 +142,29 @@ void loop() {
         b2 = cmd_buf[SERIAL_CMD_INDEX_BLUE];
         w2 = cmd_buf[SERIAL_CMD_INDEX_WHITE];
 
-        // debug strip.setPixelColor(0,r2,g2,b2); strip.show();
-        if ((r1!=r2) || (g1!=g2) || (b1!=b2)) {
-            colorWave(r1,g1,b1,r2,g2,b2,SPEED);
-            r1 = r2; g1 = g2; b1 = b2;
+        switch(cmd) {
+            case NEO_FX_RESET:
+                colorFill(0,0,0,NEO_NUM_LEDS);
+                break;
+            case NEO_FX_WAVE:
+                if ((r1!=r2) || (g1!=g2) || (b1!=b2)) {
+                    colorWave(r1,g1,b1,r2,g2,b2,NEO_SPEED);
+                    r1 = r2; g1 = g2; b1 = b2;
+                }
+                break;
+            case NEO_FX_FIRE:
+                break;
+            case NEO_FX_FLASH:
+                // not for paws
+                break;
+            case NEO_FX_METEOR:
+                break;
+            case NEO_FX_FILL:
+                colorFill(r2,g2,b2,10);
+                break;
         }
+
     }
 
-    delay(SPEED);
+    delay(NEO_SPEED);
 }
