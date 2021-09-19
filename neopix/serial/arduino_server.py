@@ -99,10 +99,15 @@ def serialReceive(msg):
     for i, ser in enumerate(devices_serial):
         line = ser.readline().replace('\r\n','')
         mylogger(devices_names[i] + ' <<< sum:' + line)
-        if line == '':
-            mylogger(devices_names[i] + ' ERROR: empty answer')
-        elif not int(line) == sum_orig:
-            mylogger(devices_names[i] + ' ERROR: wrong checksum')
+        try:
+            if line == '':
+                mylogger(devices_names[i] + ' ERROR: empty answer')
+            elif 'init' in line:
+                mylogger(devices_names[i] + ' ERROR: restarted')
+            elif not int(line) == sum_orig:
+                mylogger(devices_names[i] + ' ERROR: wrong checksum')
+        except Exception as e:
+            mylogger(e)
 
 
 #---------------------------------------------------------
@@ -119,13 +124,16 @@ try:
         elif msg == 'kill':
             mylogger('socket <<< kill')
             break
+        elif msg == 'ping':
+            mylogger('socket <<< ping')
         else:
             mylogger('socket <<< ' + msg.replace('\n',''))
             serialSend(msg)
             time.sleep(0.01)
             serialReceive(msg)
 except Exception as e:
-    print e
+    mylogger(e)
 
+mylogger('Exit')
 os.remove(SOCKETFILE)
 serialClose()

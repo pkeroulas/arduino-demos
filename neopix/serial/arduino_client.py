@@ -34,10 +34,25 @@ import socket, subprocess, time, os
 
 SOCKETFILE = "/tmp/socketname"
 
+def socketSend(msg):
+    try:
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.connect(SOCKETFILE)
+        s.send(msg.encode())
+        data = s.recv(1024)
+        s.close()
+        mylogger('<<< ' + data.replace('\r\n',''))
+    except Exception as e:
+        print(e)
+        return False
+    return True
+
 def socketServerCheck():
     if os.path.exists(SOCKETFILE):
-        mylogger('Server OK')
-        return;
+        if socketSend('ping'):
+            mylogger('Server OK')
+            return;
+        os.remove(SOCKETFILE)
 
     script_path = os.path.dirname(os.path.realpath(__file__))
     mylogger('Server down')
@@ -53,24 +68,22 @@ def socketServerCheck():
             mylogger('Server not found, EXIT')
             exit(1)
 
-def socketSend(msg):
-    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    s.connect(SOCKETFILE)
-    s.send(msg.encode())
-    data = s.recv(1024)
-    s.close()
-    mylogger('<<< ' + data.replace('\r\n',''))
-
 #---------------------------------------------------------
 import sys
 
 if len(sys.argv) < 7:
-    if len(sys.argv) == 2 and sys.argv[1] == 'kill':
-        if os.path.exists(SOCKETFILE):
-            mylogger('kill server')
-            socketSend('kill')
-        else:
-            mylogger('server is down')
+    if len(sys.argv) == 2:
+        if sys.argv[1] == 'start':
+            socketServerCheck()
+        elif sys.argv[1] == 'kill':
+            if os.path.exists(SOCKETFILE):
+                mylogger('kill server')
+                socketSend('kill')
+            else:
+                mylogger('server is down')
+        elif sys.argv[1] == 'ping':
+            mylogger('ping server')
+            socketSend('ping')
         exit(0)
 
     mylogger('ERROR Not enough args')
