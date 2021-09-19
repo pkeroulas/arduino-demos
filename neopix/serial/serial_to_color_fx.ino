@@ -32,6 +32,8 @@ int MY_ID = ARDUINO_ID_LEFT_FRONT_PAW;
 #define NEO_FX_METEOR 3
 #define NEO_FX_FLASH  4
 #define NEO_FX_FILL   5
+#define NEO_FX_COLOR  6
+#define NEO_FX_MAX    6
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NEO_NUM_LEDS, NEO_CTRL_PIN, NEO_GRB + NEO_KHZ800);
 
@@ -172,6 +174,27 @@ void setPixelHeatColor (int Pixel, byte temperature) {
     }
 }
 
+void flash(byte r, byte g, byte b) {
+    // pre flash
+    colorFill(r<<1,g<<1,b<<1,NEO_NUM_LEDS);
+    delay(NEO_SPEED);
+    colorFill(0,0,0,NEO_NUM_LEDS);
+    delay(3*NEO_SPEED);
+
+    // fast fade-in fade-out
+    colorFill(r<<2,g<<2,b<<2,NEO_NUM_LEDS);
+    delay(3*NEO_SPEED);
+    colorFill(r<<1,g<<1,b<<1,NEO_NUM_LEDS);
+    delay(3*NEO_SPEED);
+    colorFill(r,g,b,NEO_NUM_LEDS);
+    delay(6*NEO_SPEED);
+    colorFill(r<<1,g<<1,b<<1,NEO_NUM_LEDS);
+    delay(3*NEO_SPEED);
+    colorFill(r<<2,g<<2,b<<2,NEO_NUM_LEDS);
+    delay(3*NEO_SPEED);
+    colorFill(0,0,0,NEO_NUM_LEDS);
+}
+
 // -----------------------------------------------------------------------------
 // SERIAL
 
@@ -183,68 +206,27 @@ void setPixelHeatColor (int Pixel, byte temperature) {
 #define SERIAL_CMD_INDEX_WHITE  5
 #define SERIAL_CMD_LEN          6
 
-int cmd_buf[SERIAL_CMD_LEN] = {0,0,0,0,0,0};
 int neo_current_fx =  NEO_FX_RESET;
 
 void serialEvent() {
     while (Serial.available()) {
-        serialProcessLine();
+        int buf[SERIAL_CMD_LEN] = {0,0,0,0,0,0};
+        serialProcessLine(buf);
 
-        int id = cmd_buf[SERIAL_CMD_INDEX_ID];
+        int id = buf[SERIAL_CMD_INDEX_ID];
         if ((id != MY_ID) && (id != ARDUINO_ID_ALL)) { // is it for me?
             break;
         }
-
-        int cmd = cmd_buf[SERIAL_CMD_INDEX_CMD];
-        if(cmd != NEO_FX_FLASH) {// flash short and temporary, don't change fx and background
-            r2 = cmd_buf[SERIAL_CMD_INDEX_RED];
-            g2 = cmd_buf[SERIAL_CMD_INDEX_GREEN];
-            b2 = cmd_buf[SERIAL_CMD_INDEX_BLUE];
-            w2 = cmd_buf[SERIAL_CMD_INDEX_WHITE];
+        int cmd = buf[SERIAL_CMD_INDEX_CMD];
+        if (cmd > NEO_FX_MAX) {
+            break;
         }
 
-        switch(cmd) {
-            case NEO_FX_RESET:
-                neo_current_fx = NEO_FX_FILL;
-                colorFill(0,0,0,NEO_NUM_LEDS);
-                r1 = g1 = b1 = r2 = g2 = b2 = 0; // this is new backgroud
-                break;
-            case NEO_FX_WAVE: // this is long but don't interrupt
-                if ((r1!=r2) || (g1!=g2) || (b1!=b2)) {
-                    colorWave(r1,g1,b1,r2,g2,b2,NEO_SPEED);
-                    r1 = r2; g1 = g2; b1 = b2;
-                    neo_current_fx = NEO_FX_FILL;
-                }
-                break;
-            case NEO_FX_FIRE: // let's do it in main loop, so it can be interruptable
-                neo_current_fx = NEO_FX_FIRE;
-                break;
-            case NEO_FX_FLASH: // this is short and temporary, don't change fx
-                // TODO should probably just use W chan
-                colorFill(cmd_buf[SERIAL_CMD_INDEX_RED],cmd_buf[SERIAL_CMD_INDEX_GREEN],cmd_buf[SERIAL_CMD_INDEX_BLUE],NEO_NUM_LEDS);
-                delay(NEO_SPEED);
-                colorFill(0,0,0,NEO_NUM_LEDS);
-                delay(NEO_SPEED); delay(NEO_SPEED); delay(NEO_SPEED);
-                colorFill(r2,g2,g2,NEO_NUM_LEDS);
-                delay(NEO_SPEED); delay(NEO_SPEED); delay(NEO_SPEED);
-                colorFill(0,0,0,NEO_NUM_LEDS);
-                break;
-            case NEO_FX_METEOR: // let's do it in main loop, so it can be interruptable
-                colorFill(0,0,0,NEO_NUM_LEDS);
-                neo_current_fx = NEO_FX_METEOR;
-                meteor_index = 0;
-                break;
-            case NEO_FX_FILL:
-                neo_current_fx = NEO_FX_FILL;
-                colorFill(r2,g2,b2,NEO_NUM_LEDS);
-                r1 = r2; g1 = g2; b1 = b2; // this is new background
-                break;
-        }
-
+        update(buf);
     }
 }
 
-bool serialProcessLine() {
+void serialProcessLine (int *buf) {
     delay(5);
     byte string [20];
     byte size = Serial.readBytes(string, 20);
@@ -254,8 +236,8 @@ bool serialProcessLine() {
     int checksum = 0;
     char* ptr = strtok(string, ",");
     while (ptr != NULL) {
-        cmd_buf[i] = atoi(ptr);
-        checksum += cmd_buf[i];
+        buf[i] = atoi(ptr);
+        checksum += buf[i];
         i++;
         ptr = strtok(NULL, ",");
     }
@@ -264,10 +246,10 @@ bool serialProcessLine() {
     Serial.println(String(checksum));
     /*
     for (int i=0; i<SERIAL_CMD_LEN) {
-        Serial.print(String(" cmd_buf["));
+        Serial.print(String(" buf["));
         Serial.print(String(i));
         Serial.print(String("]:"));
-        Serial.print(String(cmd_buf[i]));
+        Serial.print(String(buf[i]));
         Serial.print(",");
     }
     */
@@ -275,6 +257,60 @@ bool serialProcessLine() {
 
 // -----------------------------------------------------------------------------
 // MAIN
+
+void update(int *buf) {
+    int cmd = buf[SERIAL_CMD_INDEX_CMD];
+
+    int sum_colors = buf[SERIAL_CMD_INDEX_RED] + buf[SERIAL_CMD_INDEX_GREEN] + buf[SERIAL_CMD_INDEX_BLUE] + buf[SERIAL_CMD_INDEX_WHITE];
+
+    // change foreground color for wave, fire, meteor, fill & color, *if color is not null*
+    if (((cmd == NEO_FX_WAVE) || (cmd == NEO_FX_FIRE) || (cmd == NEO_FX_METEOR) || (cmd == NEO_FX_FILL) || (cmd == NEO_FX_COLOR)) && (sum_colors > 0)) {
+        r2 = buf[SERIAL_CMD_INDEX_RED];
+        g2 = buf[SERIAL_CMD_INDEX_GREEN];
+        b2 = buf[SERIAL_CMD_INDEX_BLUE];
+        w2 = buf[SERIAL_CMD_INDEX_WHITE];
+    }
+
+    switch(cmd) {
+        case NEO_FX_RESET:
+            colorFill(0,0,0,NEO_NUM_LEDS);
+            r1 = g1 = b1 = r2 = g2 = b2 = 0; // this is new backgroud
+            break;
+        case NEO_FX_WAVE: // this is long but don't interrupt
+            if ((r1!=r2) || (g1!=g2) || (b1!=b2)) {
+                colorWave(r1,g1,b1,r2,g2,b2,NEO_SPEED);
+                r1 = r2; g1 = g2; b1 = b2;
+                neo_current_fx = NEO_FX_FILL;
+            }
+            break;
+        case NEO_FX_FIRE: // let's do it in main loop, so it can be interruptable
+            neo_current_fx = NEO_FX_FIRE;
+            break;
+        case NEO_FX_FLASH: // this is short and temporary, don't change fx
+            // TODO should probably just use W chan
+            flash(buf[SERIAL_CMD_INDEX_RED], buf[SERIAL_CMD_INDEX_GREEN],buf[SERIAL_CMD_INDEX_BLUE]<<1);
+            if (neo_current_fx == NEO_FX_FILL)
+                colorFill(r1,g1,b1NEO_NUM_LEDS);
+            break;
+        case NEO_FX_METEOR: // let's do it in main loop, so it can be interruptable
+            colorFill(0,0,0,NEO_NUM_LEDS);
+            neo_current_fx = NEO_FX_METEOR;
+            meteor_index = 0;
+            break;
+        case NEO_FX_FILL:
+            neo_current_fx = NEO_FX_FILL;
+            colorFill(r2,g2,b2,NEO_NUM_LEDS);
+            r1 = r2; g1 = g2; b1 = b2; // this is new background
+            break;
+        case NEO_FX_COLOR:
+            if (neo_current_fx == NEO_FX_FILL){ // re-trigger wave
+                buf[SERIAL_CMD_INDEX_CMD] = NEO_FX_WAVE;
+                update(buf);
+            }
+            // r2, g2, b2 were already updated for meteor and fire
+            break;
+    }
+}
 
 void setup() {
     strip.begin();
