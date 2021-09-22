@@ -16,13 +16,13 @@
 #define ARDUINO_ID_HEAD   7
 
 // EDIT THIS:
-int MY_ID = ARDUINO_ID_LEFT_FRONT_PAW;
+#define MY_ID ARDUINO_ID_BELLY
 
 // -----------------------------------------------------------------------------
 // NEOPIXEL
 
 #define NEO_CTRL_PIN 6
-#define NEO_NUM_LEDS 180
+#define NEO_NUM_LEDS_MAX 180
 #define NEO_SPEED 10
 #define NEO_FADE  100
 
@@ -35,9 +35,9 @@ int MY_ID = ARDUINO_ID_LEFT_FRONT_PAW;
 #define NEO_FX_COLOR  6
 #define NEO_FX_MAX    6
 
-//Adafruit_NeoPixel strip = Adafruit_NeoPixel(NEO_NUM_LEDS, NEO_CTRL_PIN, NEO_GRB + NEO_KHZ800);
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(NEO_NUM_LEDS, NEO_CTRL_PIN, NEO_GRBW + NEO_KHZ800);
-// TODO: define HAS_WHITE and select NEO_GRBW for paws, back and head
+int strip_type = ((MY_ID == ARDUINO_ID_BELLY)? NEO_RGB : NEO_GRBW) + NEO_KHZ800;
+int NEO_NUM_LEDS = (MY_ID == ARDUINO_ID_BELLY)? 180 : 140;
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NEO_NUM_LEDS, NEO_CTRL_PIN, strip_type);
 
 uint8_t r1,g1,b1,w1; // background color
 uint8_t r2,g2,b2,w2; // foreground color
@@ -119,7 +119,7 @@ byte colorMix(byte c1, byte c2, uint8_t i, uint8_t fade) {
 }
 
 void Fire(int Cooling, int Sparking, int SpeedDelay) {
-    static byte heat[NEO_NUM_LEDS];
+    static byte heat[NEO_NUM_LEDS_MAX];
     int cooldown;
 
     // Step 1.  Cool down every cell a little
