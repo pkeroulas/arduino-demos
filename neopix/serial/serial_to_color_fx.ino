@@ -45,6 +45,11 @@ uint8_t r2,g2,b2,w2; // foreground color
 void colorWave(byte red1, byte green1, byte blue1, byte white1, byte red2, byte green2, byte blue2, byte white2, int SpeedDelay) {
     // Fill the dots one after the other with a color
     for(uint16_t i=0; i<strip.numPixels()+NEO_FADE; i++) {
+        if (Serial.available()) { // interrupt if new message
+            // fill with new
+            return false;
+        }
+
         for (uint8_t k=0; k<NEO_FADE; k++)
         {
             strip.setPixelColor(
@@ -279,6 +284,7 @@ void update(int *buf) {
     switch(cmd) {
         case NEO_FX_RESET:
             colorFill(0, 0, 0, 0, NEO_NUM_LEDS);
+            neo_current_fx = NEO_FX_RESET;
             r1 = g1 = b1 = w1 = r2 = g2 = b2 = w2 = 0; // this is new backgroud
             break;
         case NEO_FX_WAVE: // this is long but don't interrupt
@@ -333,7 +339,7 @@ void setup() {
 void loop() {
     switch(neo_current_fx) {
         case NEO_FX_FIRE:
-            // Fire(55,120,1); is real fire
+            // Fire(55,120,1); was initial fire
             Fire(r2,g2,0);
             break;
         case NEO_FX_FILL: // restore background
