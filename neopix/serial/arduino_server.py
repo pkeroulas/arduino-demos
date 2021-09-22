@@ -70,7 +70,7 @@ def serialOpen():
 
     mylogger('Devices' + str(devices_names))
     for dev in devices_names:
-        devices_serial.append(serial.Serial(dev, 115200, timeout=1))
+        devices_serial.append(serial.Serial(dev, 115200, timeout=0.2))
 
     for i, ser in enumerate(devices_serial):
         line = ser.readline();
@@ -94,7 +94,7 @@ def serialSend(msg):
 
 def serialReceive(msg):
     global devices_names, devices_serial
-    sum_orig = sum([int(v) for v in msg.split(',')])
+    sum_orig = [int(v) for v in msg.split(',')][6]
 
     for i, ser in enumerate(devices_serial):
         line = ser.readline().replace('\r\n','')

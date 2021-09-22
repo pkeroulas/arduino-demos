@@ -202,14 +202,17 @@ void flash(byte r, byte g, byte b, byte w) {
 #define SERIAL_CMD_INDEX_GREEN  3
 #define SERIAL_CMD_INDEX_BLUE   4
 #define SERIAL_CMD_INDEX_WHITE  5
-#define SERIAL_CMD_LEN          6
+#define SERIAL_CMD_CHECKSUM     6
+#define SERIAL_CMD_LEN          7
 
 int neo_current_fx =  NEO_FX_RESET;
 
 void serialEvent() {
     while (Serial.available()) {
-        int buf[SERIAL_CMD_LEN] = {0,0,0,0,0,0};
-        serialProcessLine(buf);
+        int buf[SERIAL_CMD_LEN] = {0, 0, 0, 0, 0, 0, 0};
+        if (! serialProcessLine(buf)) {
+            break; // wrong checksum
+        }
 
         int id = buf[SERIAL_CMD_INDEX_ID];
         if ((id != MY_ID) && (id != ARDUINO_ID_ALL)) { // is it for me?
@@ -224,10 +227,10 @@ void serialEvent() {
     }
 }
 
-void serialProcessLine (int *buf) {
+bool serialProcessLine (int *buf) {
     delay(5);
-    byte string [20];
-    byte size = Serial.readBytes(string, 20);
+    byte string [50];
+    byte size = Serial.readBytes(string, 50);
     string[size] = 0; // Add the final 0 to end the C string
 
     int i = 0;
@@ -241,7 +244,6 @@ void serialProcessLine (int *buf) {
     }
 
     // debug
-    Serial.println(String(checksum));
     /*
     for (int i=0; i<SERIAL_CMD_LEN) {
         Serial.print(String(" buf["));
@@ -251,6 +253,11 @@ void serialProcessLine (int *buf) {
         Serial.print(",");
     }
     */
+
+    // back to checksum
+    checksum -= buf[--i];
+    Serial.println(String(checksum));
+    return (checksum == buf[i]);
 }
 
 // -----------------------------------------------------------------------------

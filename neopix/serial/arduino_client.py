@@ -98,8 +98,8 @@ r   = int(sys.argv[3])
 g   = int(sys.argv[4])
 b   = int(sys.argv[5])
 w   = int(sys.argv[6])
+s   = ID + cmd + r + g + b + w
 
-msg = str(ID) + ',' + str(cmd) + ',' + str(r) + ','+ str(g) + ',' + str(b) + ',' + str(w) + '\n'
-sum_msg = sum([int(v) for v in msg.split(',')])
-mylogger('>>> ID:'+str(ID) + ' CMD:'+str(cmd) + ' RGB:['+str(r)+','+str(g)+','+str(b)+','+str(w)+']  sum: '+ str(sum_msg))
+msg = str(ID) + ',' + str(cmd) + ',' + str(r) + ','+ str(g) + ',' + str(b) + ',' + str(w) + ',' + str(s) + '\n'
+mylogger('>>> ID:'+str(ID) + ' CMD:'+str(cmd) + ' RGB:['+str(r)+','+str(g)+','+str(b)+','+str(w)+']  sum:'+ str(s))
 socketSend(msg)
