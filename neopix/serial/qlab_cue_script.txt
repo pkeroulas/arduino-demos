@@ -1,0 +1,29 @@
+#define ARDUINO_ID_ALL    0
+#define ARDUINO_ID_LEFT_FRONT_PAW    1
+#define ARDUINO_ID_RIGHT_FRONT_PAW   2
+#define ARDUINO_ID_LEFT_BACK_PAW     3
+#define ARDUINO_ID_RIGHT_BACK_PAW    4
+#define ARDUINO_ID_BELLY  5
+#define ARDUINO_ID_BACK   6
+#define ARDUINO_ID_HEAD   7
+#define CMD_RESET  0
+#define CMD_WAVE   1
+#define CMD_FIRE   2
+#define CMD_METEOR 3
+#define CMD_FLASH  4
+#define CMD_FILL   5
+#define CMD_COLOR  6
+#define CMD_MAX    6
+
+property arduinoID : 1
+property cmd : 1
+property r : 0
+property g : 200
+property b : 0
+
+tell application id "com.figure53.QLab.4" to tell front workspace
+# install pyserial lib "pip install --user pyserial" from terminal and
+adapt path to python script qlab_to_serial.py
+do shell script "python
+    /opt/arduino_client.py " & arduinoID & " " & cmd & " " & r & " " & g & " " & b
+end tell
