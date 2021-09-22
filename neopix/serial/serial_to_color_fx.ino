@@ -35,7 +35,7 @@
 #define NEO_FX_COLOR  6
 #define NEO_FX_MAX    6
 
-int strip_type = ((MY_ID == ARDUINO_ID_BELLY)? NEO_RGB : NEO_GRBW) + NEO_KHZ800;
+int strip_type = ((MY_ID == ARDUINO_ID_BELLY)? NEO_GRB : NEO_GRBW) + NEO_KHZ800;
 int NEO_NUM_LEDS = (MY_ID == ARDUINO_ID_BELLY)? 180 : 140;
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NEO_NUM_LEDS, NEO_CTRL_PIN, strip_type);
 
