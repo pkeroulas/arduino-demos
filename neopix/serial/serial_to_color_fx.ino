@@ -35,16 +35,14 @@ int MY_ID = ARDUINO_ID_LEFT_FRONT_PAW;
 #define NEO_FX_COLOR  6
 #define NEO_FX_MAX    6
 
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(NEO_NUM_LEDS, NEO_CTRL_PIN, NEO_GRB + NEO_KHZ800);
-
+//Adafruit_NeoPixel strip = Adafruit_NeoPixel(NEO_NUM_LEDS, NEO_CTRL_PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NEO_NUM_LEDS, NEO_CTRL_PIN, NEO_GRBW + NEO_KHZ800);
 // TODO: define HAS_WHITE and select NEO_GRBW for paws, back and head
-//       Adafruit_NeoPixel strip(PIXEL_COUNT, PIXEL_PIN, NEO_GRBW + NEO_KHZ800);
-//       strip.setPixelColor(Pixel, strip.Color(red, green, blue));
 
 uint8_t r1,g1,b1,w1; // background color
 uint8_t r2,g2,b2,w2; // foreground color
 
-void colorWave(byte red1, byte green1, byte blue1, byte red2, byte green2, byte blue2,int SpeedDelay) {
+void colorWave(byte red1, byte green1, byte blue1, byte white1, byte red2, byte green2, byte blue2, byte white2, int SpeedDelay) {
     // Fill the dots one after the other with a color
     for(uint16_t i=0; i<strip.numPixels()+NEO_FADE; i++) {
         for (uint8_t k=0; k<NEO_FADE; k++)
@@ -53,7 +51,8 @@ void colorWave(byte red1, byte green1, byte blue1, byte red2, byte green2, byte 
                 i-NEO_FADE+k,
                 colorMix(red1, red2, k, NEO_FADE),
                 colorMix(green1, green2, k, NEO_FADE),
-                colorMix(blue1, blue2, k, NEO_FADE)
+                colorMix(blue1, blue2, k, NEO_FADE),
+                colorMix(white1, white2, k, NEO_FADE)
             );
         }
         strip.show();
@@ -61,23 +60,22 @@ void colorWave(byte red1, byte green1, byte blue1, byte red2, byte green2, byte 
     }
 }
 
-void colorFill(byte r, byte g, byte b, int len) {
+void colorFill(byte r, byte g, byte b, byte w, int len) {
     for(uint16_t i=0; i<len; i++) {
-        strip.setPixelColor(i, r, g, b);
+        strip.setPixelColor(i, r, g, b, w);
     }
     strip.show();
 }
 
 int meteor_index = 0;
 
-bool meteor(byte red, byte green, byte blue, byte meteorSize, byte meteorTrailDecay, boolean meteorRandomDecay, int SpeedDelay) {
+bool meteor(byte red, byte green, byte blue, byte white, byte meteorSize, byte meteorTrailDecay, boolean meteorRandomDecay, int SpeedDelay) {
     for(int i = meteor_index; i < NEO_NUM_LEDS+25; i++) { // this loop is more like a timeline
         meteor_index = i;
-        if (Serial.available()) {
+        if (Serial.available()) { // interrupt if new message
             return false;
         }
 
-        //for(int i = 0; i < NEO_NUM_LEDS; i++) {
         // fade brightness all LEDs one step
         for(int j=0; j<NEO_NUM_LEDS; j++) { // this loop is a real iterator along the strip
             if( (!meteorRandomDecay) || (random(10)>5) ) {
@@ -88,7 +86,7 @@ bool meteor(byte red, byte green, byte blue, byte meteorSize, byte meteorTrailDe
         // draw meteor only, full color
         for(int j = 0; j < meteorSize; j++) {
             if( ( i-j <NEO_NUM_LEDS) && (i-j>=0) ) {
-                strip.setPixelColor(NEO_NUM_LEDS-(i-j), red, green, blue);
+                strip.setPixelColor(NEO_NUM_LEDS-(i-j), red, green, blue, white);
             }
         }
 
@@ -113,7 +111,7 @@ void fadeToBlack(int ledNo, byte fadeValue) {
     g=(g<=10)? 0 : (int) g-(g*fadeValue/256);
     b=(b<=10)? 0 : (int) b-(b*fadeValue/256);
 
-    strip.setPixelColor(ledNo, r,g,b);
+    strip.setPixelColor(ledNo, r, g, b, 0);
 }
 
 byte colorMix(byte c1, byte c2, uint8_t i, uint8_t fade) {
@@ -166,33 +164,33 @@ void setPixelHeatColor (int Pixel, byte temperature) {
 
     // figure out which third of the spectrum we're in:
     if( t192 > 0x80) {                     // hottest
-        strip.setPixelColor(Pixel, 255, 255, heatramp);
+        strip.setPixelColor(Pixel, 255, 255, heatramp, 0);
     } else if( t192 > 0x40 ) {             // middle
-        strip.setPixelColor(Pixel, 255, heatramp, 0);
+        strip.setPixelColor(Pixel, 255, heatramp, 0, 0);
     } else {                               // coolest
-        strip.setPixelColor(Pixel, heatramp, 0, 0);
+        strip.setPixelColor(Pixel, heatramp, 0, 0, 0);
     }
 }
 
-void flash(byte r, byte g, byte b) {
+void flash(byte r, byte g, byte b, byte w) {
     // pre flash
-    colorFill(r<<1,g<<1,b<<1,NEO_NUM_LEDS);
+    colorFill(r<<1, g<<1, b<<1, w<<1, NEO_NUM_LEDS);
     delay(NEO_SPEED);
-    colorFill(0,0,0,NEO_NUM_LEDS);
+    colorFill(0, 0, 0, 0, NEO_NUM_LEDS);
     delay(3*NEO_SPEED);
 
     // fast fade-in fade-out
-    colorFill(r<<2,g<<2,b<<2,NEO_NUM_LEDS);
+    colorFill(r<<2, g<<2, b<<2, w<<2, NEO_NUM_LEDS);
     delay(3*NEO_SPEED);
-    colorFill(r<<1,g<<1,b<<1,NEO_NUM_LEDS);
+    colorFill(r<<1, g<<1, b<<1, w<<1, NEO_NUM_LEDS);
     delay(3*NEO_SPEED);
-    colorFill(r,g,b,NEO_NUM_LEDS);
+    colorFill(r, g, b, w, NEO_NUM_LEDS);
     delay(6*NEO_SPEED);
-    colorFill(r<<1,g<<1,b<<1,NEO_NUM_LEDS);
+    colorFill(r<<1, g<<1, b<<1, w<<1, NEO_NUM_LEDS);
     delay(3*NEO_SPEED);
-    colorFill(r<<2,g<<2,b<<2,NEO_NUM_LEDS);
+    colorFill(r<<2, g<<2, b<<2, w<<2, NEO_NUM_LEDS);
     delay(3*NEO_SPEED);
-    colorFill(0,0,0,NEO_NUM_LEDS);
+    colorFill(0, 0, 0, 0, NEO_NUM_LEDS);
 }
 
 // -----------------------------------------------------------------------------
@@ -273,13 +271,13 @@ void update(int *buf) {
 
     switch(cmd) {
         case NEO_FX_RESET:
-            colorFill(0,0,0,NEO_NUM_LEDS);
-            r1 = g1 = b1 = r2 = g2 = b2 = 0; // this is new backgroud
+            colorFill(0, 0, 0, 0, NEO_NUM_LEDS);
+            r1 = g1 = b1 = w1 = r2 = g2 = b2 = w2 = 0; // this is new backgroud
             break;
         case NEO_FX_WAVE: // this is long but don't interrupt
             if ((r1!=r2) || (g1!=g2) || (b1!=b2)) {
-                colorWave(r1,g1,b1,r2,g2,b2,NEO_SPEED);
-                r1 = r2; g1 = g2; b1 = b2;
+                colorWave(r1, g1, b1, w1, r2, g2, b2, w2, NEO_SPEED);
+                r1 = r2; g1 = g2; b1 = b2; w1 = w2;
                 neo_current_fx = NEO_FX_FILL;
             }
             break;
@@ -288,19 +286,19 @@ void update(int *buf) {
             break;
         case NEO_FX_FLASH: // this is short and temporary, don't change fx
             // TODO should probably just use W chan
-            flash(buf[SERIAL_CMD_INDEX_RED], buf[SERIAL_CMD_INDEX_GREEN],buf[SERIAL_CMD_INDEX_BLUE]<<1);
+            flash(buf[SERIAL_CMD_INDEX_RED], buf[SERIAL_CMD_INDEX_GREEN], buf[SERIAL_CMD_INDEX_BLUE], buf[SERIAL_CMD_INDEX_WHITE]);
             if (neo_current_fx == NEO_FX_FILL)
-                colorFill(r1,g1,b1NEO_NUM_LEDS);
+                colorFill(r1, g1, b1, w1, NEO_NUM_LEDS);
             break;
         case NEO_FX_METEOR: // let's do it in main loop, so it can be interruptable
-            colorFill(0,0,0,NEO_NUM_LEDS);
+            colorFill(0, 0, 0, 0, NEO_NUM_LEDS);
             neo_current_fx = NEO_FX_METEOR;
             meteor_index = 0;
             break;
         case NEO_FX_FILL:
             neo_current_fx = NEO_FX_FILL;
-            colorFill(r2,g2,b2,NEO_NUM_LEDS);
-            r1 = r2; g1 = g2; b1 = b2; // this is new background
+            colorFill(r2, g2, b2, w2, NEO_NUM_LEDS);
+            r1 = r2; g1 = g2; b1 = b2; w1 = w2; // this is new background
             break;
         case NEO_FX_COLOR:
             if (neo_current_fx == NEO_FX_FILL){ // re-trigger wave
@@ -316,6 +314,7 @@ void setup() {
     strip.begin();
     strip.setBrightness(50);
     strip.show(); // Initialize all pixels to 'off'
+    r1 = g1 = b1 = w1 = r2 = g2 = b2 = w2 = 0;
 
     Serial.begin(115200);
     Serial.setTimeout(10);
@@ -331,16 +330,16 @@ void loop() {
             Fire(r2,g2,0);
             break;
         case NEO_FX_FILL: // restore background
-            if ((r1!=r2) || (g1!=g2) || (b1!=b2)) {
-                colorFill(r1,g1,b1,NEO_NUM_LEDS);
+            if ((r1!=r2) || (g1!=g2) || (b1!=b2) || (w1!=w2)) {
+                colorFill(r1, g1, b1, w1, NEO_NUM_LEDS);
             }
             break;
         case NEO_FX_METEOR:
-            bool finished =meteor(r2,g2,b2,10, 150, true, 5);
+            bool finished = meteor(r2, g2, b2, w2, 10, 150, true, 0);
             if(finished)
                 neo_current_fx = NEO_FX_RESET;
             break;
     }
 
-    delay(NEO_SPEED);
+    delay(NEO_SPEED); // in ms
 }

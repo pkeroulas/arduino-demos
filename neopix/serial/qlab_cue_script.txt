@@ -20,10 +20,11 @@ property cmd : 1
 property r : 0
 property g : 200
 property b : 0
+property w : 0
 
 tell application id "com.figure53.QLab.4" to tell front workspace
 # install pyserial lib "pip install --user pyserial" from terminal and
 adapt path to python script qlab_to_serial.py
-do shell script "python
-    /opt/arduino_client.py " & arduinoID & " " & cmd & " " & r & " " & g & " " & b
+do shell script
+    "python /opt/arduino_client.py " & arduinoID & " " & cmd & " " & r & " " & g & " " & b " " & w
 end tell
