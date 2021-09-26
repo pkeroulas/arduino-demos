@@ -10,7 +10,7 @@ if os_name == 'Linux':
     SERIAL_DEV_BASE = '/dev/ttyACM*'
     SYSLOG_FILE = '/dev/log'
 elif os_name == 'Darwin':
-    SERIAL_DEV_BASE = '/dev/tty.usbmodemFA*'
+    SERIAL_DEV_BASE = '/dev/tty.usbmodem*'
     SYSLOG_FILE = '/var/run/syslog'
 else:
     print('ERROR:unknow os' + os_name)
