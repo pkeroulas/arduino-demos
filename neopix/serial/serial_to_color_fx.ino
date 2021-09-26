@@ -36,8 +36,8 @@
 #define NEO_FX_MAX    6
 
 int strip_type = ((MY_ID == ARDUINO_ID_BELLY)? NEO_GRB : NEO_GRBW) + NEO_KHZ800;
-int NEO_NUM_LEDS = (MY_ID == ARDUINO_ID_BELLY)? 180 : 140;
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(NEO_NUM_LEDS, NEO_CTRL_PIN, strip_type);
+int NEO_NUM_LEDS;
+Adafruit_NeoPixel strip;
 
 uint8_t r1,g1,b1,w1; // background color
 uint8_t r2,g2,b2,w2; // foreground color
@@ -324,6 +324,22 @@ void update(int *buf) {
 }
 
 void setup() {
+    switch(MY_ID) {
+        case ARDUINO_ID_BELLY:
+            NEO_NUM_LEDS = 180;
+            break;
+        case ARDUINO_ID_LEFT_FRONT_PAW:
+        case ARDUINO_ID_RIGHT_FRONT_PAW:
+            NEO_NUM_LEDS = 95;
+            break;
+        case ARDUINO_ID_LEFT_BACK_PAW:
+        case ARDUINO_ID_RIGHT_BACK_PAW:
+            NEO_NUM_LEDS = 109;
+            break;
+        default:
+            NEO_NUM_LEDS = 120;
+    }
+    strip = Adafruit_NeoPixel(NEO_NUM_LEDS, NEO_CTRL_PIN, strip_type);
     strip.begin();
     strip.setBrightness(50);
     strip.show(); // Initialize all pixels to 'off'
