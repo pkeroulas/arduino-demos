@@ -41,7 +41,8 @@ def socketSend(msg):
         s.send(msg.encode())
         data = s.recv(1024)
         s.close()
-        mylogger('<<< ' + data.replace('\r\n',''))
+        line = "".join( chr(x) for x in bytearray(data) )
+        mylogger('<<< ' + line.replace('\r\n',''))
     except Exception as e:
         print(e)
         return False

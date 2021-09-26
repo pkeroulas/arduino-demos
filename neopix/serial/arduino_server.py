@@ -51,9 +51,10 @@ def socketRead():
     while True:
         data = conn.recv(1024)
         if not data: break
-        conn.send('OK')
+        conn.send('OK'.encode())
         conn.close()
-        return data.encode('ascii')
+        line = "".join( chr(x) for x in bytearray(data) )
+        return line
     conn.close()
     return ''
 
@@ -90,24 +91,25 @@ def serialSend(msg):
     global devices_names, devices_serial
     for i, ser in enumerate(devices_serial):
         ser.flush()
-        ser.write(msg)
+        ser.write(msg.encode())
 
 def serialReceive(msg):
     global devices_names, devices_serial
     sum_orig = [int(v) for v in msg.split(',')][6]
 
     for i, ser in enumerate(devices_serial):
-        line = ser.readline().replace('\r\n','')
-        mylogger(devices_names[i] + ' <<< sum:' + line)
-        try:
-            if line == '':
-                mylogger(devices_names[i] + ' ERROR: empty answer')
-            elif 'init' in line:
-                mylogger(devices_names[i] + ' ERROR: restarted')
-            elif not int(line) == sum_orig:
-                mylogger(devices_names[i] + ' ERROR: wrong checksum')
-        except Exception as e:
-            mylogger(e)
+        data = ser.readline()
+        line = "".join( chr(x) for x in bytearray(data) )
+        mylogger(devices_names[i] + ' <<< sum:' + line.replace('\r\n',''))
+        #try:
+        if line == '':
+            mylogger(devices_names[i] + ' ERROR: empty answer')
+        elif 'init' in line:
+            mylogger(devices_names[i] + ' ERROR: restarted')
+        elif not int(line) == sum_orig:
+            mylogger(devices_names[i] + ' ERROR: wrong checksum')
+        #except Exception as e:
+        #    mylogger(e)
 
 
 #---------------------------------------------------------
