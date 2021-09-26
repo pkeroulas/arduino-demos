@@ -73,13 +73,16 @@ def serialOpen():
     for dev in devices_names:
         devices_serial.append(serial.Serial(dev, 115200, timeout=0.2))
 
-    for i, ser in enumerate(devices_serial):
-        line = ser.readline();
-        while not 'init' in line:
-            mylogger(devices_names[i] + '.')
-            time.sleep(1) # bootloader, init(), etc.
-            line = ser.readline().replace('\r\n','')
-        mylogger(devices_names[i] + ' <<< ' + line)
+    # ignore init sequence
+    #for i, ser in enumerate(devices_serial):
+    #    data = ser.readline();
+    #    line = "".join( chr(x) for x in bytearray(data) )
+    #    while not 'init' in line:
+    #        mylogger(devices_names[i] + '.')
+    #        time.sleep(1) # bootloader, init(), etc.
+    #        data = ser.readline();
+    #        line = "".join( chr(x) for x in bytearray(data) )
+    #    mylogger(devices_names[i] + ' <<< ' + line.replace('\r\n',''))
 
 def serialClose():
     global devices_names, devices_serial
