@@ -342,6 +342,7 @@ void setup() {
     strip = Adafruit_NeoPixel(NEO_NUM_LEDS, NEO_CTRL_PIN, strip_type);
     strip.begin();
     strip.setBrightness(50);
+    colorFill(0,0,0,0, NEO_NUM_LEDS);
     strip.show(); // Initialize all pixels to 'off'
     r1 = g1 = b1 = w1 = r2 = g2 = b2 = w2 = 0;
 
