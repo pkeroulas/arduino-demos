@@ -65,13 +65,21 @@ Had to prepend: `LD_PRELOAD=/usr/lib/x86_64-linux-gnu/alsa-lib/libasound_module_
 
 ###  Neopixel
 
-`midi_to_color_wave.ino` turns MIDI commands into color wave along the
-[Neopixel strip]((//www.adafruit.com/product/1376?length=1). It also
-report the status of button_pin 2 by sending MIDI messages back.
-
 Install [Adafruit NeoPixel](https://learn.adafruit.com/adafruit-neopixel-uberguide/arduino-library-installation)
 in `<arduino_dir>/libraries`.
 This [site](https://www.tweaking4all.com/hardware/arduino/adruino-led-strip-effects/) proposes a good examples of strip FX.
+
+#### Serial control
+
+`arduino_client/server.py` require `python3` and `pyserial`.
+`serial_to_color_fx.ino` was designed to be integrated in a puppet parts.
+It supports color FX like: wave, fire, meteor, plain, flashes.
+
+#### MIDI control
+
+`midi_to_color_wave.ino` turns MIDI commands into color wave along the
+[Neopixel strip]((//www.adafruit.com/product/1376?length=1). It also
+report the status of button_pin 2 by sending MIDI messages back.
 
 For MIDI control, Arduino UNO microcontroller doesn't have USB
 capability, thus doesn't support MIDI natively.
