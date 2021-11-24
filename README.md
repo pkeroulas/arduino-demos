@@ -69,6 +69,10 @@ Install [Adafruit NeoPixel](https://learn.adafruit.com/adafruit-neopixel-ubergui
 in `<arduino_dir>/libraries`.
 This [site](https://www.tweaking4all.com/hardware/arduino/adruino-led-strip-effects/) proposes a good examples of strip FX.
 
+#### Xmas
+
+Autonomous (no control) strip fx.
+
 #### Serial control
 
 `arduino_client/server.py` require `python3` and `pyserial`.
