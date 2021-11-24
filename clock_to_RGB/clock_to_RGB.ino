@@ -99,13 +99,13 @@ void loop () {
     else // week
     {
     */
-        // night (red) < 7:15 < orange < 7:25 day < (green) < 20h30 < night(red)
-        if ((now.hour() >= 7) && (now.hour() <= 20)) {                       // green zone
-           if ((now.hour() == 7) && (now.minute() < 15)) { RGB_color(RED); } // exception red
+        // night (red) < 7:00 < orange < 7:10 day < (green) < 20h00 < night(red)
+        if ((now.hour() >= 7) && (now.hour() < 20)) {                       // green zone
+           //if ((now.hour() == 7) && (now.minute() < 1)) { RGB_color(RED); } // exception red morning
 
-           else if ((now.hour() == 7) && (now.minute() < 25)) { RGB_color(ORANGE); } // orange
+           if ((now.hour() == 7) && (now.minute() <= 10)) { RGB_color(ORANGE); } // orange
 
-           else if ((now.hour() == 20) && (now.minute() > 20)) { RGB_color(RED); } // exception
+           //else if ((now.hour() == 20) && (now.minute() > 0)) { RGB_color(RED); } // exception evening
 
            else { RGB_color(GREEN); }
         }
