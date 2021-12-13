@@ -7,26 +7,14 @@
 // NEOPIXEL
 
 #define NEO_CTRL_PIN 6
-#define NEO_NUM_LEDS_MAX 180
-#define NEO_SPEED 10
 #define NEO_FADE  100
 
-#define NEO_FX_RESET  0
-#define NEO_FX_WAVE   1
-#define NEO_FX_FIRE   2
-#define NEO_FX_METEOR 3
-#define NEO_FX_FLASH  4
-#define NEO_FX_FILL   5
-#define NEO_FX_COLOR  6
-#define NEO_FX_MAX    6
+#define STRIP_TYPE NEO_GRB + NEO_KHZ800
+#define NUM_LEDS 200
+#define SEGMENT_SIZE 50
 
-int strip_type = NEO_GRB + NEO_KHZ800;
-int NEO_NUM_LEDS;
 Adafruit_NeoPixel strip;
-
-uint8_t neo_current_fx;
-uint8_t r1,g1,b1,w1; // background color
-uint8_t r2,g2,b2,w2; // foreground color
+uint8_t r,g,b,w; // foreground color
 
 void colorWave(byte red1, byte green1, byte blue1, byte white1, byte red2, byte green2, byte blue2, byte white2, int SpeedDelay) {
     // Fill the dots one after the other with a color
@@ -46,35 +34,29 @@ void colorWave(byte red1, byte green1, byte blue1, byte white1, byte red2, byte 
     }
 }
 
-void colorFill(byte r, byte g, byte b, byte w, int len) {
-    for(uint16_t i=0; i<len; i++) {
-        strip.setPixelColor(i, r, g, b, w);
-    }
-    strip.show();
-}
-
 int meteor_index = 0;
 
 bool meteor(byte red, byte green, byte blue, byte white, byte meteorSize, byte meteorTrailDecay, boolean meteorRandomDecay, int SpeedDelay) {
-    for(int i = meteor_index; i < NEO_NUM_LEDS+25; i++) { // this loop is more like a timeline
+    for(int i = meteor_index; i < NUM_LEDS+25; i++) { // this loop is more like a timeline
         meteor_index = i;
         // fade brightness all LEDs one step
-        for(int j=0; j<NEO_NUM_LEDS; j++) { // this loop is a real iterator along the strip
+        for(int j=0; j<NUM_LEDS; j++) { // this loop is a real iterator along the strip
             if( (!meteorRandomDecay) || (random(10)>5) ) {
-                fadeToBlack(NEO_NUM_LEDS-j, meteorTrailDecay );
+                fadeToBlack(NUM_LEDS-j, meteorTrailDecay );
             }
         }
 
         // draw meteor only, full color
         for(int j = 0; j < meteorSize; j++) {
-            if( ( i-j <NEO_NUM_LEDS) && (i-j>=0) ) {
-                strip.setPixelColor(NEO_NUM_LEDS-(i-j), red, green, blue, white);
+            if( ( i-j <NUM_LEDS) && (i-j>=0) ) {
+                strip.setPixelColor(NUM_LEDS-(i-j), red, green, blue, white);
             }
         }
 
         strip.show();
         delay(SpeedDelay);
     }
+    meteor_index = 0;
     return true;
 }
 
@@ -100,113 +82,242 @@ byte colorMix(byte c1, byte c2, uint8_t i, uint8_t fade) {
     return c1*i/fade + c2*(fade-i)/fade;
 }
 
-void Fire(int Cooling, int Sparking, int SpeedDelay) {
-    static byte heat[NEO_NUM_LEDS_MAX];
-    int cooldown;
+//---------------------------------------------------
 
-    // Step 1.  Cool down every cell a little
-    for( int i = 0; i < NEO_NUM_LEDS; i++) {
-        cooldown = random(0, ((Cooling * 10) / NEO_NUM_LEDS) + 2);
+void showStrip() {
+    strip.show();
+}
 
-        if(cooldown>heat[i]) {
-            heat[i]=0;
-        } else {
-            heat[i]=heat[i]-cooldown;
+void setPixel(int Pixel, byte red, byte green, byte blue) {
+   // NeoPixel
+   strip.setPixelColor(Pixel, strip.Color(red, green, blue));
+}
+
+void setAll(byte red, byte green, byte blue) {
+  for(int i = 0; i < NUM_LEDS; i++ ) {
+    setPixel(i, red, green, blue);
+  }
+  showStrip();
+}
+
+void CylonBounce(byte red, byte green, byte blue, int EyeSize, int SpeedDelay, int ReturnDelay){
+    for(int i = 0; i < NUM_LEDS-EyeSize-2; i++) {
+        setAll(0,0,0);
+        setPixel(i, red/10, green/10, blue/10);
+        for(int j = 1; j <= EyeSize; j++) {
+            setPixel(i+j, red, green, blue);
+        }
+        setPixel(i+EyeSize+1, red/10, green/10, blue/10);
+        showStrip();
+        delay(SpeedDelay);
+    }
+
+    delay(ReturnDelay);
+
+    for(int i = NUM_LEDS-EyeSize-2; i > 0; i--) {
+        setAll(0,0,0);
+        setPixel(i, red/10, green/10, blue/10);
+        for(int j = 1; j <= EyeSize; j++) {
+            setPixel(i+j, red, green, blue);
+        }
+        setPixel(i+EyeSize+1, red/10, green/10, blue/10);
+        showStrip();
+        delay(SpeedDelay);
+    }
+    delay(ReturnDelay);
+}
+
+void TwinkleRandom(int Count, int SpeedDelay, boolean OnlyOne) {
+    setAll(0,0,0);
+
+    for (int i=0; i<Count; i++) {
+        setPixel(random(NUM_LEDS),random(0,255),random(0,255),random(0,255));
+        showStrip();
+        delay(SpeedDelay);
+        if(OnlyOne) {
+            setAll(0,0,0);
         }
     }
 
-    // Step 2.  Heat from each cell drifts 'up' and diffuses a little
-    for( int k= NEO_NUM_LEDS - 1; k >= 2; k--) {
-        heat[k] = (heat[k - 1] + heat[k - 2] + heat[k - 2]) / 3;
-    }
-
-    // Step 3.  Randomly ignite new 'sparks' near the bottom
-    if( random(255) < Sparking ) {
-        int y = random(7);
-        heat[y] = heat[y] + random(160,255);
-        //heat[y] = random(160,255);
-    }
-
-    // Step 4.  Convert heat to LED colors
-    for( int j = 0; j < NEO_NUM_LEDS; j++) {
-        setPixelHeatColor(j, heat[j] );
-    }
-
-    strip.show();
     delay(SpeedDelay);
 }
 
-void setPixelHeatColor (int Pixel, byte temperature) {
-    // Scale 'heat' down from 0-255 to 0-191
-    byte t192 = round((temperature/255.0)*191);
-
-    // calculate ramp up from
-    byte heatramp = t192 & 0x3F; // 0..63
-    heatramp <<= 2; // scale up to 0..252
-
-    // figure out which third of the spectrum we're in:
-    if( t192 > 0x80) {                     // hottest
-        strip.setPixelColor(Pixel, 255, 255, heatramp, 0);
-    } else if( t192 > 0x40 ) {             // middle
-        strip.setPixelColor(Pixel, 255, heatramp, 0, 0);
-    } else {                               // coolest
-        strip.setPixelColor(Pixel, heatramp, 0, 0, 0);
+void RunningLights(byte red, byte green, byte blue, int WaveDelay) {
+    int Position=0;
+    for(int j=0; j<NUM_LEDS*2; j++)
+    {
+        Position++; // = 0; //Position + Rate;
+        for(int i=0; i<NUM_LEDS; i++) {
+            // sine wave, 3 offset waves make a rainbow!
+            //float level = sin(i+Position) * 127 + 128;
+            //setPixel(i,level,0,0);
+            //float level = sin(i+Position) * 127 + 128;
+            setPixel(i,((sin(i+Position) * 127 + 128)/255)*red,
+                    ((sin(i+Position) * 127 + 128)/255)*green,
+                    ((sin(i+Position) * 127 + 128)/255)*blue);
+        }
+        showStrip();
+        delay(WaveDelay);
     }
 }
 
-void flash(byte r, byte g, byte b, byte w) {
-    // pre flash
-    colorFill(r<<1, g<<1, b<<1, w<<1, NEO_NUM_LEDS);
-    delay(NEO_SPEED);
-    colorFill(0, 0, 0, 0, NEO_NUM_LEDS);
-    delay(3*NEO_SPEED);
+void theaterChaseRainbow(int SpeedDelay) {
+    byte *c;
+    int start = random(200);
 
-    // fast fade-in fade-out
-    colorFill(r<<2, g<<2, b<<2, w<<2, NEO_NUM_LEDS);
-    delay(3*NEO_SPEED);
-    colorFill(r<<1, g<<1, b<<1, w<<1, NEO_NUM_LEDS);
-    delay(3*NEO_SPEED);
-    colorFill(r, g, b, w, NEO_NUM_LEDS);
-    delay(6*NEO_SPEED);
-    colorFill(r<<1, g<<1, b<<1, w<<1, NEO_NUM_LEDS);
-    delay(3*NEO_SPEED);
-    colorFill(r<<2, g<<2, b<<2, w<<2, NEO_NUM_LEDS);
-    delay(3*NEO_SPEED);
-    colorFill(0, 0, 0, 0, NEO_NUM_LEDS);
+    for (int j=start; j < start+50; j++) {     // colors in the wheel
+        for (int q=0; q < 3; q++) {
+            for (int i=0; i < NUM_LEDS; i=i+3) {
+                c = Wheel( (i+j) % 255);
+                setPixel(i+q, *c, *(c+1), *(c+2));    //turn every third pixel on
+            }
+            showStrip();
+
+            delay(SpeedDelay);
+
+            for (int i=0; i < NUM_LEDS; i=i+3) {
+                setPixel(i+q, 0,0,0);        //turn every third pixel off
+            }
+        }
+    }
 }
 
+byte * Wheel(byte WheelPos) {
+    static byte c[3];
+
+    if(WheelPos < 85) {
+        c[0]=WheelPos * 3;
+        c[1]=255 - WheelPos * 3;
+        c[2]=0;
+    } else if(WheelPos < 170) {
+        WheelPos -= 85;
+        c[0]=255 - WheelPos * 3;
+        c[1]=0;
+        c[2]=WheelPos * 3;
+    } else {
+        WheelPos -= 170;
+        c[0]=0;
+        c[1]=WheelPos * 3;
+        c[2]=255 - WheelPos * 3;
+    }
+
+    return c;
+}
+
+void BouncingColoredBalls(int BallCount, byte colors[][3], int time) {
+    float Gravity = -9.81;
+    int StartHeight = 1;
+
+    float Height[BallCount];
+    float ImpactVelocityStart = sqrt( -2 * Gravity * StartHeight );
+    float ImpactVelocity[BallCount];
+    float TimeSinceLastBounce[BallCount];
+    int   Position[BallCount];
+    long  ClockTimeSinceLastBounce[BallCount];
+    float Dampening[BallCount];
+
+    for (int i = 0 ; i < BallCount ; i++) {
+        ClockTimeSinceLastBounce[i] = millis();
+        Height[i] = StartHeight;
+        Position[i] = 0;
+        ImpactVelocity[i] = ImpactVelocityStart;
+        TimeSinceLastBounce[i] = 0;
+        Dampening[i] = 0.90 - float(i)/pow(BallCount,2);
+    }
+
+    for (int j = 0 ; j < time ; j++) {
+        for (int i = 0 ; i < BallCount ; i++) {
+            TimeSinceLastBounce[i] =  millis() - ClockTimeSinceLastBounce[i];
+            Height[i] = 0.5 * Gravity * pow( TimeSinceLastBounce[i]/1000 , 2.0 ) + ImpactVelocity[i] * TimeSinceLastBounce[i]/1000;
+
+            if ( Height[i] < 0 ) {
+                Height[i] = 0;
+                ImpactVelocity[i] = Dampening[i] * ImpactVelocity[i];
+                ClockTimeSinceLastBounce[i] = millis();
+
+                if ( ImpactVelocity[i] < 0.01 ) {
+                    ImpactVelocity[i] = ImpactVelocityStart;
+                }
+            }
+            Position[i] = round( Height[i] * (NUM_LEDS - 1) / StartHeight);
+        }
+
+        for (int i = 0 ; i < BallCount ; i++) {
+            setPixel(Position[i],colors[i][0],colors[i][1],colors[i][2]);
+        }
+
+        showStrip();
+        setAll(0,0,0);
+    }
+}
 // -----------------------------------------------------------------------------
 // MAIN
 
+int loopCounter = 0;
+long randNumber;
+
 void setup() {
-    NEO_NUM_LEDS = 120;
-    strip = Adafruit_NeoPixel(NEO_NUM_LEDS, NEO_CTRL_PIN, strip_type);
+    strip = Adafruit_NeoPixel(NUM_LEDS, NEO_CTRL_PIN, STRIP_TYPE);
     strip.begin();
     strip.setBrightness(50);
-    colorFill(0,0,0,0, NEO_NUM_LEDS);
+    colorFill(0,0,0,0, NUM_LEDS);
     strip.show(); // Initialize all pixels to 'off'
-    r1 = g1 = b1 = w1 = r2 = g2 = b2 = w2 = 0;
 
     delay(10);
-    neo_current_fx = NEO_FX_FIRE;
+    randomSeed(analogRead(0));
 }
 
 void loop() {
-    switch(neo_current_fx) {
-        case NEO_FX_FIRE:
-            Fire(55,120,1); //was initial fire
+    switch (random(8)) {
+        case 0:
+            r = 120; g = 0; b = 0; // red
             break;
-        case NEO_FX_FILL: // restore background
-            if ((r1!=r2) || (g1!=g2) || (b1!=b2) || (w1!=w2)) {
-                colorFill(r1, g1, b1, w1, NEO_NUM_LEDS);
-            }
+        case 1:
+            r = 0; g = 120; b = 0; // green
             break;
-        case NEO_FX_METEOR:
-            bool finished = meteor(r2, g2, b2, w2, 10, 150, true, 0);
-            if(finished)
-                neo_current_fx = NEO_FX_RESET;
+        case 2:
+            r = 0; g = 0; b = 120; // blue
+            break;
+        case 3:
+            r = 100; g = 50; b = 0; // orange
+            break;
+        case 4:
+            r = 0; g = 100; b = 80; // cyan
+            break;
+        case 5:
+            r = 100; g = 0; b = 50; // pink
+            break;
+        case 6:
+            r = 30; g = 0; b = 100; // purple
+            break;
+        case 7:
+            r = 60; g = 80; b = 0; // orange
             break;
     }
 
-    delay(NEO_SPEED); // in ms
+    switch (random(6)) {
+        case 0:
+            meteor(r, g, b, w, SEGMENT_SIZE, 150, true, 0);
+            break;
+        case 1:
+            CylonBounce(r, g, b, SEGMENT_SIZE, 10, 50);
+            break;
+        case 2:
+            for (uint8_t k=0; k<10; k++)
+                TwinkleRandom(20, 100, false);
+            break;
+        case 3:
+            RunningLights(g, r, b, 50);
+            break;
+        case 4:
+            theaterChaseRainbow(100);
+            break;
+        case 5:
+            byte colors[3][3] = { {0xff, 0,0},
+                {0xff, 0xff, 0xff},
+                {0   , 0   , 0xff} };
+
+            BouncingColoredBalls(3, colors, 300);
+            break;
+    }
 }
