@@ -142,11 +142,15 @@ void TwinkleRandom(int Count, int SpeedDelay, boolean OnlyOne) {
     delay(SpeedDelay);
 }
 
-void RunningLights(byte red, byte green, byte blue, int WaveDelay) {
+void RunningLights(byte red, byte green, byte blue, int WaveDelay, bool direction) {
     int Position=0;
     for(int j=0; j<NUM_LEDS*2; j++)
     {
-        Position++; // = 0; //Position + Rate;
+        if (direction)
+            Position++;
+        else
+            Position--;
+
         for(int i=0; i<NUM_LEDS; i++) {
             // sine wave, 3 offset waves make a rainbow!
             //float level = sin(i+Position) * 127 + 128;
@@ -260,7 +264,6 @@ void setup() {
     strip = Adafruit_NeoPixel(NUM_LEDS, NEO_CTRL_PIN, STRIP_TYPE);
     strip.begin();
     strip.setBrightness(50);
-    colorFill(0,0,0,0, NUM_LEDS);
     strip.show(); // Initialize all pixels to 'off'
 
     delay(10);
@@ -268,7 +271,7 @@ void setup() {
 }
 
 void loop() {
-    switch (random(8)) {
+    switch (random(9)) {
         case 0:
             r = 120; g = 0; b = 0; // red
             break;
@@ -293,6 +296,9 @@ void loop() {
         case 7:
             r = 60; g = 80; b = 0; // orange
             break;
+        case 8:
+            r = 100; g = 100; b = 100; // white
+            break;
     }
 
     switch (random(6)) {
@@ -307,7 +313,7 @@ void loop() {
                 TwinkleRandom(20, 100, false);
             break;
         case 3:
-            RunningLights(g, r, b, 50);
+            RunningLights(g, r, b, 50, false);
             break;
         case 4:
             theaterChaseRainbow(100);
@@ -317,6 +323,8 @@ void loop() {
                 {0xff, 0xff, 0xff},
                 {0   , 0   , 0xff} };
 
+            BouncingColoredBalls(3, colors, 300);
+            BouncingColoredBalls(3, colors, 300);
             BouncingColoredBalls(3, colors, 300);
             break;
     }
