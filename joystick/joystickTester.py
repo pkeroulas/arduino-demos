@@ -1,6 +1,27 @@
 #!/usr/bin/python
 import pygame
 
+"""
+DragonRise USB Joystick with SNES layout
+
+UP:     axix 1: -1
+DOWN:   axix 1: 1
+LEFT:   axis 0: -1
+RIGTH:  axis 0: 1
+
+A:      Button 1
+B:      Button 2
+X:      Button 3
+Y:      Button 4
+
+L:      Button 6
+R:      Button 7
+Start:  Button 8
+Select: Button 9
+"""
+BUTTONS=['A','B','X','Y','','','L','R','Start','Select']
+
+
 # Define some colors.
 BLACK = pygame.Color('black')
 WHITE = pygame.Color('white')
@@ -44,6 +65,9 @@ pygame.joystick.init()
 # Get ready to print.
 textPrint = TextPrint()
 
+j0 = pygame.joystick.Joystick(0)
+j0.init()
+
 # -------- Main Program Loop -----------
 while not done:
     #
@@ -55,15 +79,29 @@ while not done:
         if event.type == pygame.QUIT: # If user clicked close.
             done = True # Flag that we are done so we exit this loop.
         elif event.type == pygame.JOYBUTTONDOWN:
-            print("Joystick button pressed.")
+            #print("Joystick button press.")
+            for i in range(len(BUTTONS)):
+                button = j0.get_button(i)
+                if (button > 0):
+                    print(BUTTONS[i])
         elif event.type == pygame.JOYBUTTONUP:
-            print("Joystick button released.")
+            #print("Joystick button released.")
+            print("")
         elif event.type == pygame.JOYBALLMOTION:
             print("Joystick ball motion.")
         elif event.type == pygame.JOYHATMOTION:
             print("Joystick hat motion.")
-        #elif event.type == pygame.JOYAXISMOTION: # all the time
-        #    print("Joystick axis motion.")
+        elif event.type == pygame.JOYAXISMOTION: # all the time
+            h = j0.get_axis(0)
+            if (h < 0):
+                print("LEFT")
+            elif (h > 0):
+                print("RIGHT")
+            v = j0.get_axis(1)
+            if (v < 0):
+                print("UP")
+            elif (v > 0):
+                print("DOWN")
 
     #
     # DRAWING STEP
